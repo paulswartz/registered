@@ -32,7 +32,7 @@ MERGE_DIRECTORIES = [
 MERGE_EXTENSIONS = ["nde", "plc", "rte", "trp", "pat", "ppat", "blk", "crw"]
 
 
-def fast_merge(input_filenames, output_filename):
+def fast_merge(input_filenames, output_filename, extra=""):
     """
     Merge files quickly by copying the first one.
     """
@@ -44,6 +44,7 @@ def fast_merge(input_filenames, output_filename):
             with open(input_filename) as input_file:
                 i = iter(input_file)
                 output_file.writelines(i)
+        output_file.write(extra)
 
 
 def insensitive_glob(value, prefix="*."):
@@ -63,7 +64,12 @@ def merge_extension(path, prefix, extension):
         for filename in (path / directory).glob(insensitive_glob(extension))
     ]
     output_filename = path / f"{prefix}.{extension}"
-    fast_merge(files_to_merge, output_filename)
+    # replaces signup.blk behavior
+    if extension == "blk":
+        extra = f"VSC;        ;          ;  ;  ;{prefix};        ;                                        \n"
+    else:
+        extra = ""
+    fast_merge(files_to_merge, output_filename, extra)
 
 
 def main(args):
