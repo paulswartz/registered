@@ -1,3 +1,4 @@
+from datetime import date
 from registered import parser
 
 
@@ -48,6 +49,24 @@ def test_parser_PPAT():
             timepoint_pattern_id="90_iv_2",
             timepoints=["davis", "hlscl", "sull", "amall"],
         )
+    ]
+    actual = list(parser.parse_lines(lines))
+
+    assert actual == expected
+
+
+def test_parser_CAL_DAT():
+    lines = [
+        "CAL;15032020;20062020;Cabot   ;        ",
+        "DAT;15032020;Cabot   ;abc20017;Sunday    ; 6;02;BUS22020  ;Cabot   ;hbc20017;Sunday    ; 6;02;BUS22020  ",
+    ]
+    expected = [
+        parser.Calendar(
+            start_date=date(2020, 3, 15), end_date=date(2020, 6, 20), garage="Cabot"
+        ),
+        parser.CalendarDate(
+            date=date(2020, 3, 15), garage="Cabot", service_key="017", day_type="Sunday"
+        ),
     ]
     actual = list(parser.parse_lines(lines))
 

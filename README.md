@@ -30,3 +30,11 @@ Exits with 1 if there were any errors.
 ```
 $ pipenv run validate <path to Rating/Combine or Rating/Combine/HASTUS_export>
 ```
+
+## Calendar
+
+Print a CSV which has the service information for each garage, by date.
+
+```
+$ pipenv run calendar <path to Rating/Combine or Rating/Combine/HASTUS_export>
+```

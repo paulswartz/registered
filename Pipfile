@@ -18,6 +18,7 @@ python_version = "3.9"
 format = "black registered tests"
 lint = "python -m pylint registered"
 test = "python -m pytest tests"
+calendar = "python -m registered.calendar"
 merge = "python -m registered.merge"
 validate = "python -m registered.validate"
 

@@ -1,6 +1,7 @@
 """
 Parser(s) for the TransitMaster export files.
 """
+from datetime import datetime, date
 import attr
 
 
@@ -55,6 +56,16 @@ def strip_timepoints(timepoint_list):
     Converter to convert a list of timepoints with whitespace to a regular list.
     """
     return [s.strip() for s in timepoint_list if s.strip() != ""]
+
+
+def iso_date(string_or_date):
+    """
+    Converter from ISO dates (DDMMYYYY) to a `datetime.date`.
+    """
+    if isinstance(string_or_date, date):
+        return string_or_date
+
+    return datetime.strptime(string_or_date.strip(), "%d%m%Y").date()
 
 
 @attr.s
@@ -125,8 +136,53 @@ class TimepointPattern:  # pylint: disable=too-few-public-methods
         """
         Convert a list of parts to a TimepointPattern.
         """
-        [route_id, direction_name, _a, timepoint_pattern_id, *timepoints] = parts
+        [route_id, direction_name, _a, timepoint_pattern_id, *timepoints, _b] = parts
         return cls(route_id, direction_name, timepoint_pattern_id, timepoints)
 
 
-TAG_TO_CLASS = {"PAT": Pattern, "TPS": PatternStop, "PPAT": TimepointPattern}
+@attr.s
+class Calendar:  # pylint: disable=too-few-public-methods
+    """
+    A start/end date range for a garage.
+    """
+
+    start_date = attr.ib(converter=iso_date)
+    end_date = attr.ib(converter=iso_date)
+    garage = attr.ib(converter=strip_whitespace)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts to a Calendar.
+        """
+        [start_date, end_date, garage, _a] = parts
+        return cls(start_date, end_date, garage)
+
+
+@attr.s
+class CalendarDate:  # pylint: disable=too-few-public-methods
+    """
+    A specific date for which a service is active.
+    """
+
+    date = attr.ib(converter=iso_date)
+    garage = attr.ib(converter=strip_whitespace)
+    service_key = attr.ib(converter=lambda x: strip_whitespace(x)[-3:])
+    day_type = attr.ib(converter=strip_whitespace)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts to a CalendarDate.
+        """
+        [cal_date, garage, extended_service_key, day_type, *_rest] = parts
+        return cls(cal_date, garage, extended_service_key, day_type)
+
+
+TAG_TO_CLASS = {
+    "PAT": Pattern,
+    "TPS": PatternStop,
+    "PPAT": TimepointPattern,
+    "CAL": Calendar,
+    "DAT": CalendarDate,
+}
