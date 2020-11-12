@@ -69,7 +69,10 @@ def merge_extension(path, prefix, extension):
     output_filename = path / f"{prefix}.{extension}"
     # replaces signup.blk behavior
     if extension == "blk":
-        extra = f"VSC;        ;          ;  ;  ;{prefix};        ;                                        \n"
+        extra = (
+            f"VSC;        ;          ;  ;  ;{prefix}"
+            ";        ;                                        \n"
+        )
     else:
         extra = ""
     fast_merge(files_to_merge, output_filename, extra)
