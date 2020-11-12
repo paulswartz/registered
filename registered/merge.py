@@ -61,7 +61,10 @@ def merge_extension(path, prefix, extension):
     files_to_merge = [
         filename
         for directory in MERGE_DIRECTORIES
-        for filename in (path / directory).glob(insensitive_glob(extension))
+        for filename in sorted(
+            (path / directory).glob(insensitive_glob(extension)),
+            key=lambda filename: filename.name.lower(),
+        )
     ]
     output_filename = path / f"{prefix}.{extension}"
     # replaces signup.blk behavior
