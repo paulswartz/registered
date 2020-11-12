@@ -4,11 +4,21 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+attrs = "*"
 
 [dev-packages]
+pytest = "*"
+black = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.9"
 
 [scripts]
+format = "black registered tests"
+lint = "pylint registered"
+test = "python -m pytest tests"
 merge = "python -m registered.merge"
+
+[pipenv]
+allow_prereleases = true

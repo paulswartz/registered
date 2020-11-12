@@ -18,27 +18,18 @@ MERGE_DIRECTORIES = [
     "HASTUS_export",
     "ArborTest",
     "SohamTest",
-    "CabotTest"
+    "CabotTest",
     "BennttTest",
     "SomvlTest",
     "CharlTest",
     "AlbanTest",
     "FellsTest",
     "QuinTest",
-    "LynnTest"
-    "SohamDR"
+    "LynnTest",
+    "SohamDR",
 ]
 
-MERGE_EXTENSIONS = [
-    "nde",
-    "plc",
-    "rte",
-    "trp",
-    "pat",
-    "ppat",
-    "blk",
-    "crw"
-]
+MERGE_EXTENSIONS = ["nde", "plc", "rte", "trp", "pat", "ppat", "blk", "crw"]
 
 
 def fast_merge(input_filenames, output_filename):
@@ -76,6 +67,9 @@ def merge_extension(path, prefix, extension):
 
 
 def main(args):
+    """
+    Entrypoint for running merge as a CLI tool.
+    """
     path = pathlib.Path(args.DIR)
     if path.name.lower() != "combine":
         raise RuntimeError("expected a Combine directory")
@@ -86,7 +80,8 @@ def main(args):
 
 
 parser = argparse.ArgumentParser(
-    description="Merge the HASTUS export files into single file per type")
+    description="Merge the HASTUS export files into single file per type"
+)
 parser.add_argument("DIR", help="The Combine directory where all the file live")
 
 if __name__ == "__main__":
