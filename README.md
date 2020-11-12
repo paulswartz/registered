@@ -20,3 +20,13 @@ Writes the merged files to `<rating>.pat`, `<rating>.nde`, &c.
 ```
 $ pipenv run merge <path to Rating/Combine>
 ```
+
+## Validate
+
+Validate that the rating files are correct.
+
+Exits with 1 if there were any errors.
+
+```
+$ pipenv run validate <path to Rating/Combine or Rating/Combine/HASTUS_export>
+```

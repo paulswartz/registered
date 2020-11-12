@@ -16,9 +16,10 @@ python_version = "3.9"
 
 [scripts]
 format = "black registered tests"
-lint = "pylint registered"
+lint = "python -m pylint registered"
 test = "python -m pytest tests"
 merge = "python -m registered.merge"
+validate = "python -m registered.validate"
 
 [pipenv]
 allow_prereleases = true
