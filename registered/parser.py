@@ -179,10 +179,60 @@ class CalendarDate:  # pylint: disable=too-few-public-methods
         return cls(cal_date, garage, extended_service_key, day_type)
 
 
+@attr.s
+class Stop:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
+    """
+    A stop.
+    """
+
+    stop_id = attr.ib(converter=strip_whitespace)
+    name = attr.ib(converter=strip_whitespace)
+    timepoint_id = attr.ib(converter=strip_whitespace)
+    latitude = attr.ib(converter=float)
+    longitude = attr.ib(converter=float)
+    on_street = attr.ib(converter=strip_whitespace)
+    at_street = attr.ib(converter=strip_whitespace)
+    municipality = attr.ib(converter=strip_whitespace)
+    in_service = attr.ib(converter=boolean_integer)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Covert a list of parts to a Stop.
+        """
+        [
+            stop_id,
+            name,
+            timepoint_id,
+            latitude,
+            longitude,
+            on_street,
+            at_street,
+            _,
+            _,
+            municipality,
+            _,
+            in_service,
+            *_rest,
+        ] = parts
+        return cls(
+            stop_id,
+            name,
+            timepoint_id,
+            latitude,
+            longitude,
+            on_street,
+            at_street,
+            municipality,
+            in_service,
+        )
+
+
 TAG_TO_CLASS = {
     "PAT": Pattern,
     "TPS": PatternStop,
     "PPAT": TimepointPattern,
     "CAL": Calendar,
     "DAT": CalendarDate,
+    "STP": Stop,
 }

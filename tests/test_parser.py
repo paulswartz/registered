@@ -71,3 +71,25 @@ def test_parser_CAL_DAT():
     actual = list(parser.parse_lines(lines))
 
     assert actual == expected
+
+
+def test_parser_STP():
+    lines = [
+        "STP;10000   ;Tremont St opp Temple Pl                          ;pktrm ;  774308.2; 2954951.1;WINTER STREET                                     ;TEMPLE PLACE                                      ;     ;    ;boston;        ;1;     ; 19.9"
+    ]
+    expected = [
+        parser.Stop(
+            stop_id="10000",
+            name="Tremont St opp Temple Pl",
+            timepoint_id="pktrm",
+            latitude=774308.2,
+            longitude=2954951.1,
+            on_street="WINTER STREET",
+            at_street="TEMPLE PLACE",
+            municipality="boston",
+            in_service=True,
+        )
+    ]
+    actual = list(parser.parse_lines(lines))
+
+    assert actual == expected
