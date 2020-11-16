@@ -10,6 +10,7 @@ attrs = "*"
 pytest = "*"
 black = "*"
 pylint = "*"
+atomicwrites = "*"
 
 [requires]
 python_version = "3.9"

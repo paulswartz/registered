@@ -4,11 +4,21 @@ A set of scripts for working with TransitMaster
 
 ## Setup
 
+### Linux/MacOS
 ```
 $ asdf install
 $ asdf reshim
 $ pip install pipenv
-$ pipenv install
+$ pipenv install  # --dev if you want to do development on the scripts
+```
+
+### Windows
+```
+$ choco install pyenv-win
+$ pyenv install
+$ pyenv rehash
+$ pip install pipenv
+$ pipenv install  # --dev if you want to do development on the scripts
 ```
 
 ## Merge
