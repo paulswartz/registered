@@ -77,4 +77,56 @@ def validate_unique_timepoint_pattern(rating):
                 )
 
 
-ALL_VALIDATORS = [validate_unique_pattern_prefix, validate_unique_timepoint_pattern]
+def validate_no_extra_timepoints(rating):
+    """
+    All timepoints in PAT should also be in PPAT for a given route/direction.
+    
+    Exceptions:
+    - PPAT records with an empty direction_name
+    - RAD/WAD routes
+    """
+    timepoints_by_route_direction = {}
+    for timepoint_pattern in rating["ppat"]:
+        key = (timepoint_pattern.route_id, timepoint_pattern.direction_name)
+        timepoints_by_route_direction[key] = set(timepoint_pattern.timepoints)
+
+    key = None
+    for record in rating["pat"]:
+        # keep track of the last Pattern we saw
+        if isinstance(record, parser.Pattern):
+            if record.route_id in {"rad", "wad"}:
+                # RAD/WAD routes don't need to get validated
+                key = None
+                continue
+
+            key = (record.route_id, record.direction_name)
+            if key not in timepoints_by_route_direction and record.direction_name != "":
+                yield ValidationError(
+                    file_type="pat",
+                    key=key,
+                    error="timepoint_pattern_missing",
+                    description="No matching timepoint pattern found",
+                )
+            continue
+        # record is a PatternStop
+        if key is None or key not in timepoints_by_route_direction:
+            # missing route/directions already provided a ValidationError above
+            continue
+        if not record.is_timepoint:
+            continue
+
+        timepoint = record.timepoint_id
+        if timepoint not in timepoints_by_route_direction[key]:
+            yield ValidationError(
+                file_type="pat",
+                key=key,
+                error="timepoint_missing_from_timepoint_pattern",
+                description=f"{repr(timepoint)} missing from timepoint patterns",
+            )
+
+
+ALL_VALIDATORS = [
+    validate_unique_pattern_prefix,
+    validate_unique_timepoint_pattern,
+    validate_no_extra_timepoints,
+]
