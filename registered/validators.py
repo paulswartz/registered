@@ -6,7 +6,7 @@ import attr
 from registered import parser
 
 
-@attr.s
+@attr.s(frozen=True)
 class ValidationError:  # pylint: disable=too-few-public-methods
     """
     Wrapper around a single instance of a validation error.
@@ -80,7 +80,7 @@ def validate_unique_timepoint_pattern(rating):
 def validate_no_extra_timepoints(rating):
     """
     All timepoints in PAT should also be in PPAT for a given route/direction.
-    
+
     Exceptions:
     - PPAT records with an empty direction_name
     - RAD/WAD routes

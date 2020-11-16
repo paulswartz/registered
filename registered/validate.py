@@ -10,12 +10,13 @@ def validate_rating(rating):
     """
     Validate a given Rating, printing errors and returning True if there were errors.
     """
-    any_errors = False
+    seen_errors = set()
     for validator in validators.ALL_VALIDATORS:
         for error in validator(rating):
-            print(error)
-            any_errors = True
-    return any_errors
+            if error not in seen_errors:
+                print(error)
+                seen_errors.add(error)
+    return seen_errors != set()
 
 
 def main(args):
