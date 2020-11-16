@@ -74,7 +74,7 @@ class Pattern:  # pylint: disable=too-few-public-methods
     A unique description for a list of stops.
     """
 
-    route = attr.ib(converter=strip_whitespace)
+    route_id = attr.ib(converter=strip_whitespace)
     pattern_id = attr.ib()
     direction_name = attr.ib(converter=strip_whitespace)
     sign_code = attr.ib(converter=optional_int)

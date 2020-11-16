@@ -9,7 +9,7 @@ def test_parser_PAT_TPS():
     ]
     expected = [
         parser.Pattern(
-            route="90",
+            route_id="90",
             pattern_id="0090_0047",
             direction_name="Inbound",
             sign_code=907,
