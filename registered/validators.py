@@ -165,7 +165,9 @@ def validate_all_blocks_have_trips(rating):
     revenue_trips = {
         trip.trip_id
         for trip in rating["trp"]
-        if isinstance(trip, parser.Trip) and trip.is_revenue
+        if isinstance(trip, parser.Trip)
+        and trip.revenue_type
+        in {parser.TripRevenueType.REVENUE, parser.TripRevenueType.OPPORTUNITY}
     }
 
     def error():

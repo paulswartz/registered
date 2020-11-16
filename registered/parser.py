@@ -2,6 +2,7 @@
 Parser(s) for the TransitMaster export files.
 """
 from datetime import datetime, date, time
+import enum
 import attr
 
 
@@ -10,7 +11,7 @@ def parse_lines(lines):
     Parse an iterator of lines into an iterator of records.
     """
     for line in lines:
-        [tag, *parts] = line.split(";")
+        [tag, *parts] = line.strip().split(";")
         klass = TAG_TO_CLASS[tag]
         try:
             yield klass.from_line(parts)
@@ -95,6 +96,31 @@ def iso_date(string_or_date):
         return string_or_date
 
     return datetime.strptime(string_or_date.strip(), "%d%m%Y").date()
+
+
+class TripRevenueType(enum.Enum):
+    """
+    Type of trip revenue.
+    """
+
+    NON_REVENUE = "0"
+    REVENUE = "1"
+    OPPORTUNITY = "X"
+
+    @classmethod
+    def for_trip(cls, tag):
+        """
+        Convert from a tag present in a TRP record.
+
+        Empty values are treated as non-revenue.
+        """
+        if isinstance(tag, cls):
+            return tag
+
+        tag = tag.strip()
+        if tag == "":
+            tag = "0"
+        return cls(tag)
 
 
 @attr.s
@@ -324,7 +350,7 @@ class Trip:  # pylint: disable=too-few-public-methods
     pattern_id = attr.ib(converter=strip_whitespace)
     description = attr.ib(converter=strip_whitespace)
     sequence = attr.ib(converter=int)
-    is_revenue = attr.ib(converter=boolean_integer)
+    revenue_type = attr.ib(converter=TripRevenueType.for_trip)
 
     @classmethod
     def from_line(cls, parts):
@@ -340,10 +366,10 @@ class Trip:  # pylint: disable=too-few-public-methods
             description,
             sequence,
             _,
-            is_revenue,
+            revenue_type,
             *_,
         ] = parts
-        return cls(trip_id, route_id, pattern_id, description, sequence, is_revenue)
+        return cls(trip_id, route_id, pattern_id, description, sequence, revenue_type)
 
 
 @attr.s

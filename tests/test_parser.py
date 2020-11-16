@@ -10,6 +10,13 @@ def test_transitmaster_time():
     assert parser.transitmaster_time("1200x") == time(0, 0)
 
 
+def test_TripRevenueType_for_trip():
+    assert parser.TripRevenueType.for_trip("0") == parser.TripRevenueType.NON_REVENUE
+    assert parser.TripRevenueType.for_trip(" ") == parser.TripRevenueType.NON_REVENUE
+    assert parser.TripRevenueType.for_trip("1") == parser.TripRevenueType.REVENUE
+    assert parser.TripRevenueType.for_trip("X") == parser.TripRevenueType.OPPORTUNITY
+
+
 def test_parser_PAT_TPS():
     lines = [
         "PAT;   90;0090_0047;Inbound   ; 4;907     ;1;_       ;Davis Station - Assembly Row",
@@ -157,7 +164,7 @@ def test_parser_TRP():
             pattern_id="0193_0029",
             description="Regular",
             sequence=0,
-            is_revenue=True,
+            revenue_type=parser.TripRevenueType.REVENUE,
         ),
         parser.TripTime(time=time(10, 45)),
         parser.Trip(
@@ -166,7 +173,7 @@ def test_parser_TRP():
             pattern_id="099030001",
             description="Regular",
             sequence=0,
-            is_revenue=False,
+            revenue_type=parser.TripRevenueType.OPPORTUNITY,
         ),
     ]
     actual = list(parser.parse_lines(lines))
