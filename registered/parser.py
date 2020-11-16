@@ -1,7 +1,7 @@
 """
 Parser(s) for the TransitMaster export files.
 """
-from datetime import datetime, date
+from datetime import datetime, date, time
 import attr
 
 
@@ -56,6 +56,35 @@ def strip_timepoints(timepoint_list):
     Converter to convert a list of timepoints with whitespace to a regular list.
     """
     return [s.strip() for s in timepoint_list if s.strip() != ""]
+
+
+def strip_times(time_list):
+    """
+    Converter of a list of garage/time items to (garage, time) pairs.
+    """
+    if time_list == []:
+        return time_list
+
+    if isinstance(time_list[0], tuple):
+        return time_list
+
+    return [
+        (strip_whitespace(garage), transitmaster_time(time))
+        for (garage, time) in zip(time_list[:-1:2], time_list[1::2])
+        if garage.strip() != "" and time.strip() != ""
+    ]
+
+
+def transitmaster_time(string_or_time):
+    """
+    Converter from a time "HHMMp" to a `datetime.time`.
+    """
+    if isinstance(string_or_time, time):
+        return string_or_time
+
+    return datetime.strptime(
+        string_or_time.upper().replace("X", "A") + "M", "%I%M%p"
+    ).time()
 
 
 def iso_date(string_or_date):
@@ -228,6 +257,62 @@ class Stop:  # pylint: disable=too-few-public-methods,too-many-instance-attribut
         )
 
 
+@attr.s
+class Version:  # pylint: disable=too-few-public-methods
+    """
+    Version of the block file.
+    """
+
+    service_key = attr.ib(converter=lambda x: strip_whitespace(x)[-3:])
+    day_type = attr.ib(converter=strip_whitespace)
+    garage = attr.ib(converter=strip_whitespace)
+    description = attr.ib(converter=strip_whitespace)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts to a Version.
+        """
+        [service_key, day_type, _, _, _, garage, description] = parts
+        return cls(service_key, day_type, garage, description)
+
+
+@attr.s
+class Block:  # pylint: disable=too-few-public-methods
+    """
+    A block: a group of trips for a single vehicle.
+    """
+
+    run_id = attr.ib(converter=strip_whitespace)
+    block_id = attr.ib(converter=strip_whitespace)
+    times = attr.ib(converter=strip_times)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts to a Block.
+        """
+        [run_id, block_id, _, *times, _, _, _, _, _, _] = parts
+        return cls(run_id, block_id, times)
+
+
+@attr.s
+class TripIdentifier:  # pylint: disable=too-few-public-methods
+    """
+    A trip ID which is part of a block.
+    """
+
+    trip_id = attr.ib(converter=strip_whitespace)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts to a TripIdentifier.
+        """
+        [trip_id] = parts
+        return cls(trip_id)
+
+
 TAG_TO_CLASS = {
     "PAT": Pattern,
     "TPS": PatternStop,
@@ -235,4 +320,7 @@ TAG_TO_CLASS = {
     "CAL": Calendar,
     "DAT": CalendarDate,
     "STP": Stop,
+    "VSC": Version,
+    "BLK": Block,
+    "TIN": TripIdentifier,
 }

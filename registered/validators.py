@@ -125,8 +125,36 @@ def validate_no_extra_timepoints(rating):
             )
 
 
+def validate_block_leave_arrive_same_garage(rating):
+    """
+    Validate that each block leaves/arrives from the same garage.
+
+    Exceptions:
+    - Lynn -> Wonderland
+    - Wonderland -> Lynn
+    """
+    for record in rating["blk"]:
+        if not isinstance(record, parser.Block):
+            continue
+
+        (first_garage, _) = record.times[0]
+        (last_garage, _) = record.times[-1]
+
+        if first_garage != last_garage and (first_garage, last_garage) not in {
+            ("lynn", "wondw"),
+            ("wondw", "lynn"),
+        }:
+            yield ValidationError(
+                file_type="blk",
+                key=(record.run_id, record.block_id),
+                error="block_with_different_garage",
+                description=f"leaves from {first_garage}, arrives at {last_garage}",
+            )
+
+
 ALL_VALIDATORS = [
     validate_unique_pattern_prefix,
     validate_unique_timepoint_pattern,
     validate_no_extra_timepoints,
+    validate_block_leave_arrive_same_garage,
 ]

@@ -1,5 +1,13 @@
-from datetime import date
+from datetime import date, time
 from registered import parser
+
+
+def test_transitmaster_time():
+    assert parser.transitmaster_time("0123a") == time(1, 23)
+    assert parser.transitmaster_time("1055p") == time(22, 55)
+    assert parser.transitmaster_time("1200a") == time(0, 0)
+    assert parser.transitmaster_time("1200p") == time(12, 0)
+    assert parser.transitmaster_time("1200x") == time(0, 0)
 
 
 def test_parser_PAT_TPS():
@@ -93,3 +101,44 @@ def test_parser_STP():
     actual = list(parser.parse_lines(lines))
 
     assert actual == expected
+
+
+def test_parser_VSC_BLK_TIN():
+    lines = [
+        "VSC;hba20021;Weekday   ; 0;02;BUS22020  ;Albny   ;Albany Weekday",
+        "BLK;   A57-11;   4245117;12345  ;albny ;0415a;wtryd ;0430a;kenbs ;0908a;albny ;0929a;    ;    ;        ;021;;",
+        "TIN;  43858890",
+    ]
+    expected = [
+        parser.Version(
+            service_key="021",
+            day_type="Weekday",
+            garage="Albny",
+            description="Albany Weekday",
+        ),
+        parser.Block(
+            run_id="A57-11",
+            block_id="4245117",
+            times=[
+                ("albny", time(4, 15)),
+                ("wtryd", time(4, 30)),
+                ("kenbs", time(9, 8)),
+                ("albny", time(9, 29)),
+            ],
+        ),
+        parser.TripIdentifier(trip_id="43858890"),
+    ]
+    actual = list(parser.parse_lines(lines))
+
+    assert actual == expected
+
+
+def test_parser_BLK_unusual():
+    lines = [
+        "BLK;    P-P13;   4202004;12345  ;prwb  ;0750p;orhgt ;0810p;orhgt ;1235x;prwb  ;1245x;    ;    ;        ;011;;",
+        "BLK;   T70-40;   4214397;12345  ;somvl ;0410a;unvpk ;0428a;kndl  ;1031p;somvl ;1046p;4YE_;    ;        ;021;;",
+        "BLK;  S743-72;   4240570;12345  ;soham ;0358a;conrd ;0413a;conrd ;0614p;soham ;0629p;6SD_;6SD_;        ;011;;",
+    ]
+    actual = list(parser.parse_lines(lines))
+
+    assert actual != []
