@@ -152,9 +152,60 @@ def validate_block_leave_arrive_same_garage(rating):
             )
 
 
+def validate_all_blocks_have_trips(rating):
+    """
+    Validate that all blocks have at least one revenue trip.
+
+    Exceptions:
+    - RAD/WAD blocks
+    """
+    previous_block = None
+    has_revenue_trips = False
+
+    revenue_trips = {
+        trip.trip_id
+        for trip in rating["trp"]
+        if isinstance(trip, parser.Trip) and trip.is_revenue
+    }
+
+    def error():
+        return ValidationError(
+            file_type="blk",
+            key=(previous_block.run_id, previous_block.block_id),
+            error="block_with_no_trips",
+            description="Block has no/only non-revenue trips",
+        )
+
+    for record in rating["blk"]:
+        if isinstance(record, parser.Block):
+            if "rad" in record.run_id or "wad" in record.run_id:
+                # don't need to validate RAD/WAD trips.
+                previous_block = None
+                has_revenue_trips = False
+                continue
+
+            if previous_block is not None and not has_revenue_trips:
+                yield error()
+
+            previous_block = record
+            has_revenue_trips = False
+            continue
+
+        if previous_block is None:
+            continue
+
+        if isinstance(record, parser.TripIdentifier):
+            if record.trip_id in revenue_trips:
+                has_revenue_trips = True
+
+    if not has_revenue_trips:
+        yield error()
+
+
 ALL_VALIDATORS = [
     validate_unique_pattern_prefix,
     validate_unique_timepoint_pattern,
     validate_no_extra_timepoints,
     validate_block_leave_arrive_same_garage,
+    validate_all_blocks_have_trips,
 ]

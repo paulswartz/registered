@@ -142,3 +142,33 @@ def test_parser_BLK_unusual():
     actual = list(parser.parse_lines(lines))
 
     assert actual != []
+
+
+def test_parser_TRP():
+    lines = [
+        "TRP;  43857823;        ;12345  ;  193;0193_0029;Regular        ; 0;0;1",
+        "PTS; 1045a",
+        "TRP;   6417265;4    ;12345  ;9903 ;099030001;Regular        ; 0; ;X;9903",
+    ]
+    expected = [
+        parser.Trip(
+            trip_id="43857823",
+            route_id="193",
+            pattern_id="0193_0029",
+            description="Regular",
+            sequence=0,
+            is_revenue=True,
+        ),
+        parser.TripTime(time=time(10, 45)),
+        parser.Trip(
+            trip_id="6417265",
+            route_id="9903",
+            pattern_id="099030001",
+            description="Regular",
+            sequence=0,
+            is_revenue=False,
+        ),
+    ]
+    actual = list(parser.parse_lines(lines))
+
+    assert actual == expected

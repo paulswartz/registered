@@ -83,7 +83,7 @@ def transitmaster_time(string_or_time):
         return string_or_time
 
     return datetime.strptime(
-        string_or_time.upper().replace("X", "A") + "M", "%I%M%p"
+        string_or_time.strip().upper().replace("X", "A") + "M", "%I%M%p"
     ).time()
 
 
@@ -313,6 +313,56 @@ class TripIdentifier:  # pylint: disable=too-few-public-methods
         return cls(trip_id)
 
 
+@attr.s
+class Trip:  # pylint: disable=too-few-public-methods
+    """
+    A trip on a route.
+    """
+
+    trip_id = attr.ib(converter=strip_whitespace)
+    route_id = attr.ib(converter=strip_whitespace)
+    pattern_id = attr.ib(converter=strip_whitespace)
+    description = attr.ib(converter=strip_whitespace)
+    sequence = attr.ib(converter=int)
+    is_revenue = attr.ib(converter=boolean_integer)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts to a Trip.
+        """
+        [
+            trip_id,
+            _,
+            _,
+            route_id,
+            pattern_id,
+            description,
+            sequence,
+            _,
+            is_revenue,
+            *_,
+        ] = parts
+        return cls(trip_id, route_id, pattern_id, description, sequence, is_revenue)
+
+
+@attr.s
+class TripTime:  # pylint: disable=too-few-public-methods
+    """
+    The time at which a Trip arrives at one of its stops.
+    """
+
+    time = attr.ib(converter=transitmaster_time)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts to a TripTime.
+        """
+        [time_str] = parts
+        return cls(time_str)
+
+
 TAG_TO_CLASS = {
     "PAT": Pattern,
     "TPS": PatternStop,
@@ -323,4 +373,6 @@ TAG_TO_CLASS = {
     "VSC": Version,
     "BLK": Block,
     "TIN": TripIdentifier,
+    "TRP": Trip,
+    "PTS": TripTime,
 }
