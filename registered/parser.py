@@ -4,6 +4,9 @@ Parser(s) for the TransitMaster export files.
 from datetime import datetime, date, time
 import enum
 import attr
+from pyproj import Transformer
+
+STATE_PLANE_2001_TO_WGS84_TRANSFORMER = Transformer.from_crs(6492, 4326)
 
 
 def parse_lines(lines):
@@ -26,17 +29,21 @@ def strip_whitespace(string):
     return string.strip()
 
 
-def optional_int(string_or_int):
+def optional(cls):
     """
-    Converter for integers which can optionally be missing (represented by None).
+    Returns a Converter for a type which can optionally be missing (represented by None).
     """
-    if isinstance(string_or_int, int):
-        return string_or_int
 
-    if string_or_int.strip() == "":
-        return None
+    def converter(string_or_instance):
+        if isinstance(string_or_instance, cls):
+            return string_or_instance
 
-    return int(string_or_int)
+        if string_or_instance.strip() == "":
+            return None
+
+        return cls(string_or_instance)
+
+    return converter
 
 
 def boolean_integer(string_or_bool):
@@ -132,7 +139,7 @@ class Pattern:  # pylint: disable=too-few-public-methods
     route_id = attr.ib(converter=strip_whitespace)
     pattern_id = attr.ib()
     direction_name = attr.ib(converter=strip_whitespace)
-    sign_code = attr.ib(converter=optional_int)
+    sign_code = attr.ib(converter=optional(int))
     variant = attr.ib(converter=strip_whitespace)
     variant_name = attr.ib()
 
@@ -163,7 +170,7 @@ class PatternStop:  # pylint: disable=too-few-public-methods
 
     stop_id = attr.ib(converter=strip_whitespace)
     timepoint_id = attr.ib(converter=strip_whitespace)
-    sign_code = attr.ib(converter=optional_int)
+    sign_code = attr.ib(converter=optional(int))
     is_timepoint = attr.ib(converter=boolean_integer)
 
     @classmethod
@@ -243,12 +250,26 @@ class Stop:  # pylint: disable=too-few-public-methods,too-many-instance-attribut
     stop_id = attr.ib(converter=strip_whitespace)
     name = attr.ib(converter=strip_whitespace)
     timepoint_id = attr.ib(converter=strip_whitespace)
-    latitude = attr.ib(converter=float)
-    longitude = attr.ib(converter=float)
+    easting_ft = attr.ib(converter=optional(float))
+    northing_ft = attr.ib(converter=optional(float))
     on_street = attr.ib(converter=strip_whitespace)
     at_street = attr.ib(converter=strip_whitespace)
     municipality = attr.ib(converter=strip_whitespace)
     in_service = attr.ib(converter=boolean_integer)
+
+    def latlon(self):
+        """
+        Convert the easting/northing data into a latitude/longitude (WGS84) pair.
+        """
+        if self.easting_ft is None or self.northing_ft is None:
+            return None
+
+        # international_ft_to_m = 0.3048
+        # easting_m = self.easting_ft * international_ft_to_m
+        # northing_m = self.northing_ft * international_ft_to_m
+        return STATE_PLANE_2001_TO_WGS84_TRANSFORMER.transform(
+            self.easting_ft, self.northing_ft
+        )
 
     @classmethod
     def from_line(cls, parts):

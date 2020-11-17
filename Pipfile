@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 attrs = "*"
+pyproj = "*"
 
 [dev-packages]
 pytest = "*"

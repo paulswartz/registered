@@ -1,4 +1,5 @@
 from datetime import date, time
+import pytest
 from registered import parser
 
 
@@ -15,6 +16,21 @@ def test_TripRevenueType_for_trip():
     assert parser.TripRevenueType.for_trip(" ") == parser.TripRevenueType.NON_REVENUE
     assert parser.TripRevenueType.for_trip("1") == parser.TripRevenueType.REVENUE
     assert parser.TripRevenueType.for_trip("X") == parser.TripRevenueType.OPPORTUNITY
+
+
+def test_Stop_latitude_longitude():
+    stop = parser.Stop(
+        stop_id="",
+        name="",
+        timepoint_id="",
+        on_street="",
+        at_street="",
+        municipality="",
+        in_service=False,
+        easting_ft=768989.0,
+        northing_ft=2945910.0,
+    )
+    assert stop.latlon() == pytest.approx((42.330957, -71.082754))
 
 
 def test_parser_PAT_TPS():
@@ -97,8 +113,8 @@ def test_parser_STP():
             stop_id="10000",
             name="Tremont St opp Temple Pl",
             timepoint_id="pktrm",
-            latitude=774308.2,
-            longitude=2954951.1,
+            easting_ft=774308.2,
+            northing_ft=2954951.1,
             on_street="WINTER STREET",
             at_street="TEMPLE PLACE",
             municipality="boston",
