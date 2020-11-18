@@ -21,6 +21,7 @@ format = "black registered tests"
 lint = "python -m pylint registered"
 test = "python -m pytest tests"
 calendar = "python -m registered.calendar"
+stop_comparison = "python -m registered.stop_comparison"
 merge = "python -m registered.merge"
 validate = "python -m registered.validate"
 

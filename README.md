@@ -49,3 +49,11 @@ Print a CSV which has the service information for each garage, by date.
 ```
 $ pipenv run calendar <path to Rating/Combine or Rating/Combine/HASTUS_export>
 ```
+
+## Stop Comparison
+
+Print a CSV which shows new/changed stops between two ratings.
+
+```
+$ pipenv run stop_comparison <path to current Rating/Combine> <path to next Rating/Combine>
+```
