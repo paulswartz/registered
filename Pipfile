@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 attrs = "*"
 pyproj = "*"
+pyodbc = "*"
 
 [dev-packages]
 pytest = "*"
@@ -18,7 +19,7 @@ python_version = "3.9"
 
 [scripts]
 format = "black registered tests"
-lint = "python -m pylint registered"
+lint = "python -m pylint registered --extension-pkg-whitelist=pyodbc"
 test = "python -m pytest tests"
 calendar = "python -m registered.calendar"
 stop_comparison = "python -m registered.stop_comparison"

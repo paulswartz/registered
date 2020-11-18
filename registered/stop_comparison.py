@@ -3,14 +3,21 @@ CLI tool to compare the stops between two ratings.
 """
 import argparse
 from collections import defaultdict
+from pyproj import Geod
 from registered.parser import Pattern, PatternStop
 from registered.rating import Rating
+from registered.db import geo_node
+
+GEOD = Geod(ellps="WGS84")
 
 
 def output(stops, stop_ids, by_stop, change_type):
     """
     Output given stops in the appropriate TSV format.
     """
+    tm_stop_locations = {
+        stop_id: (lat, lon) for (stop_id, _, lat, lon) in geo_node(stop_ids)
+    }
     for stop_id in sorted(stop_ids, key=int):
         stop = stops[stop_id]
         (lat, lon) = stop.latlon()
@@ -18,8 +25,16 @@ def output(stops, stop_ids, by_stop, change_type):
             f"{route_id} {direction_name}"
             for (route_id, direction_name) in sorted(by_stop[stop_id])
         )
+        if stop_id in tm_stop_locations:
+            (tm_lat, tm_lon) = tm_stop_locations[stop_id]
+            (_, _, distance) = GEOD.inv(lon, lat, tm_lon, tm_lat)
+            distance = f"{int(distance)}m"
+        else:
+            distance = ""
         print(
-            f'{stop_id},{stop.name},{change_type},{lat:5f},{lon:5f},"{route_directions}"'
+            f"{stop_id},{stop.name},{change_type},"
+            f"{lat:.5f},{lon:.5f},{distance},"
+            f'"{route_directions}"'
         )
 
 
