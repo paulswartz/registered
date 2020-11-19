@@ -13,6 +13,7 @@ Merge a given HASTUS export (along with the test files) into one file per type.
 import argparse
 import shutil
 import pathlib
+from datetime import datetime
 
 MERGE_DIRECTORIES = [
     "HASTUS_export",
@@ -42,8 +43,7 @@ def fast_merge(input_filenames, output_filename, extra=""):
     with open(output_filename, "a") as output_file:
         for input_filename in input_filenames[1:]:
             with open(input_filename) as input_file:
-                i = iter(input_file)
-                output_file.writelines(i)
+                output_file.write(input_file.read())
         output_file.write(extra)
 
 
@@ -52,6 +52,36 @@ def insensitive_glob(value, prefix="*."):
     Convert an extension to a case-insensitive glob.
     """
     return prefix + "".join(f"[{v.lower()}{v.upper()}]" for v in value)
+
+
+def dedup_prefix(files_to_merge):
+    """
+    Deduplicate a list of files based on their prefix (before the dash).
+
+    For example, given these files:
+    - Prefix-11122020.blk
+    - Prefix-12122020.blk
+    - Other-11122020.blk
+
+    This would return Prefix-12122020.blk and Other-11122020.blk files. These
+    are the most recent files (by DDMMYYYY) for the given prefix.
+    """
+    most_recent_date = {}
+    most_recent = {}
+    for (index, filename) in enumerate(files_to_merge):
+        path = pathlib.Path(filename)
+        try:
+            (prefix, date_str) = path.stem.rsplit("-", maxsplit=1)
+        except ValueError:
+            # no date suffix, ensure we include the file
+            most_recent[filename] = (index, filename)
+            continue
+        date = datetime.strptime(date_str, "%d%m%Y").date()
+        if prefix not in most_recent_date or most_recent_date[prefix] < date:
+            most_recent_date[prefix] = date
+            most_recent[prefix] = (index, filename)
+
+    return [filename for (_, filename) in sorted(most_recent.values())]
 
 
 def merge_extension(path, prefix, extension):
@@ -66,6 +96,7 @@ def merge_extension(path, prefix, extension):
             key=lambda filename: filename.name.lower(),
         )
     ]
+    files_to_merge = dedup_prefix(files_to_merge)
     output_filename = path / f"{prefix}.{extension}"
     # replaces signup.blk behavior
     if extension == "blk":

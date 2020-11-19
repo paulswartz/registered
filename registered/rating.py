@@ -27,10 +27,15 @@ class Rating:  # pylint: disable=too-few-public-methods
     def __getitem__(self, extension):
         if extension not in self._cache:
             filename_glob = merge.insensitive_glob(extension)
+            filenames = merge.dedup_prefix(self.path.glob(filename_glob))
             parsed = []
-            for path in self.path.glob(filename_glob):
+            for path in filenames:
                 with open(path) as to_be_parsed:
                     parsed.extend(parser.parse_lines(to_be_parsed))
+            if parsed == []:
+                raise RuntimeError(
+                    f"unable to find {extension.upper()} files in {self.path}"
+                )
             self._cache[extension] = parsed
 
         return self._cache[extension]
