@@ -110,7 +110,7 @@ def validate_no_extra_timepoints(rating):
         if key is None or key not in timepoints_by_route_direction:
             # missing route/directions already provided a ValidationError above
             continue
-        if record.revenue_type != parser.TripRevenueType.REVENUE:
+        if record.revenue_type != parser.RevenueType.REVENUE:
             continue
 
         timepoint = record.timepoint_id
@@ -233,7 +233,7 @@ def validate_all_blocks_have_trips(rating):
         for trip in rating["trp"]
         if isinstance(trip, parser.Trip)
         and trip.revenue_type
-        in {parser.TripRevenueType.REVENUE, parser.TripRevenueType.OPPORTUNITY}
+        in {parser.RevenueType.REVENUE, parser.RevenueType.OPPORTUNITY}
     }
 
     def error():
@@ -287,7 +287,7 @@ def validate_trip_has_valid_pattern(rating):
         trip
         for trip in rating["trp"]
         if isinstance(trip, parser.Trip)
-        and trip.revenue_type != parser.TripRevenueType.NON_REVENUE
+        and trip.revenue_type != parser.RevenueType.NON_REVENUE
         and trip.pattern_id not in valid_patterns
     )
 

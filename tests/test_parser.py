@@ -11,11 +11,11 @@ def test_transitmaster_time():
     assert parser.transitmaster_time("1200x") == time(0, 0)
 
 
-def test_TripRevenueType_for_trip():
-    assert parser.TripRevenueType.for_trip("0") == parser.TripRevenueType.NON_REVENUE
-    assert parser.TripRevenueType.for_trip(" ") == parser.TripRevenueType.NON_REVENUE
-    assert parser.TripRevenueType.for_trip("1") == parser.TripRevenueType.REVENUE
-    assert parser.TripRevenueType.for_trip("X") == parser.TripRevenueType.OPPORTUNITY
+def test_RevenueType_for_tag():
+    assert parser.RevenueType.for_tag("0") == parser.RevenueType.NON_REVENUE
+    assert parser.RevenueType.for_tag(" ") == parser.RevenueType.NON_REVENUE
+    assert parser.RevenueType.for_tag("1") == parser.RevenueType.REVENUE
+    assert parser.RevenueType.for_tag("X") == parser.RevenueType.OPPORTUNITY
 
 
 def test_Stop_latitude_longitude():
@@ -47,18 +47,19 @@ def test_parser_PAT_TPS():
             sign_code=907,
             variant="_",
             variant_name="Davis Station - Assembly Row",
+            revenue_type=parser.RevenueType.REVENUE,
         ),
         parser.PatternStop(
             stop_id="5104",
             timepoint_id="davis",
             sign_code=907,
-            revenue_type=parser.TripRevenueType.REVENUE,
+            revenue_type=parser.RevenueType.REVENUE,
         ),
         parser.PatternStop(
             stop_id="00009",
             timepoint_id="arbor",
             sign_code=None,
-            revenue_type=parser.TripRevenueType.OPPORTUNITY,
+            revenue_type=parser.RevenueType.OPPORTUNITY,
         ),
     ]
     actual = list(parser.parse_lines(lines))
@@ -188,7 +189,7 @@ def test_parser_TRP():
             pattern_id="0193_0029",
             description="Regular",
             sequence=0,
-            revenue_type=parser.TripRevenueType.REVENUE,
+            revenue_type=parser.RevenueType.REVENUE,
         ),
         parser.TripTime(time=time(10, 45)),
         parser.Trip(
@@ -197,7 +198,7 @@ def test_parser_TRP():
             pattern_id="099030001",
             description="Regular",
             sequence=0,
-            revenue_type=parser.TripRevenueType.OPPORTUNITY,
+            revenue_type=parser.RevenueType.OPPORTUNITY,
         ),
     ]
     actual = list(parser.parse_lines(lines))

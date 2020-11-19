@@ -105,9 +105,9 @@ def iso_date(string_or_date):
     return datetime.strptime(string_or_date.strip(), "%d%m%Y").date()
 
 
-class TripRevenueType(enum.Enum):
+class RevenueType(enum.Enum):
     """
-    Type of trip revenue.
+    Type of revenue service.
     """
 
     NON_REVENUE = "0"
@@ -115,9 +115,9 @@ class TripRevenueType(enum.Enum):
     OPPORTUNITY = "X"
 
     @classmethod
-    def for_trip(cls, tag):
+    def for_tag(cls, tag):
         """
-        Convert from a tag present in a TRP record.
+        Convert from a tag present in a PAT, TPS, or TRP record.
 
         Empty values are treated as non-revenue.
         """
@@ -140,6 +140,7 @@ class Pattern:  # pylint: disable=too-few-public-methods
     pattern_id = attr.ib()
     direction_name = attr.ib(converter=strip_whitespace)
     sign_code = attr.ib(converter=optional(int))
+    revenue_type = attr.ib(converter=RevenueType.for_tag)
     variant = attr.ib(converter=strip_whitespace)
     variant_name = attr.ib()
 
@@ -154,12 +155,20 @@ class Pattern:  # pylint: disable=too-few-public-methods
             direction_name,
             _a,
             sign_code,
-            _b,
+            revenue_type,
             variant,
             variant_name,
             *_c,
         ] = parts
-        return cls(route, pattern_id, direction_name, sign_code, variant, variant_name)
+        return cls(
+            route,
+            pattern_id,
+            direction_name,
+            sign_code,
+            revenue_type,
+            variant,
+            variant_name,
+        )
 
 
 @attr.s
@@ -171,7 +180,7 @@ class PatternStop:  # pylint: disable=too-few-public-methods
     stop_id = attr.ib(converter=strip_whitespace)
     timepoint_id = attr.ib(converter=strip_whitespace)
     sign_code = attr.ib(converter=optional(int))
-    revenue_type = attr.ib(converter=TripRevenueType.for_trip)
+    revenue_type = attr.ib(converter=RevenueType.for_tag)
 
     @classmethod
     def from_line(cls, parts):
@@ -372,7 +381,7 @@ class Trip:  # pylint: disable=too-few-public-methods
     pattern_id = attr.ib(converter=strip_whitespace)
     description = attr.ib(converter=strip_whitespace)
     sequence = attr.ib(converter=int)
-    revenue_type = attr.ib(converter=TripRevenueType.for_trip)
+    revenue_type = attr.ib(converter=RevenueType.for_tag)
 
     @classmethod
     def from_line(cls, parts):
