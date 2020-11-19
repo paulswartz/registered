@@ -6,7 +6,7 @@ A set of scripts for working with TransitMaster
 
 ### Linux/MacOS
 ```
-$ brew install proj gdal
+$ brew install proj freetds
 $ asdf install
 $ asdf reshim
 $ pip install pipenv

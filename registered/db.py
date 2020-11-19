@@ -14,6 +14,9 @@ def sql_driver():
     if os.name == "nt":
         return "{ODBC Driver 17 for SQL Server}"
 
+    if os.name == "posix":
+        return "/usr/local/lib/libtdsodbc.so"
+
     raise RuntimeError("unknown OS: " + os.name)
 
 
@@ -33,11 +36,15 @@ def conn():
     return CONN
 
 
-def geo_node(abbrs):
+def geo_node(abbrs):  # pylint: disable=inconsistent-return-statements
     """
     Given a list of stop IDs, returns an iterator of tuples: (id, name, lat, lon).
     """
-    cursor = conn().cursor()
+    try:
+        cursor = conn().cursor()
+    except pyodbc.OperationalError:
+        return []
+
     question_marks = ", ".join("?" for _ in abbrs)
     result = cursor.execute(
         "SELECT GEO_NODE_ABBR,GEO_NODE_NAME,"
