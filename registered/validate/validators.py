@@ -4,6 +4,7 @@ Collection of validators for rating data.
 from collections import defaultdict
 import attr
 from registered import parser
+from registered.validate import helpers
 
 
 @attr.s(frozen=True)
@@ -201,10 +202,41 @@ def validate_all_blocks_have_trips(rating):
         yield error()
 
 
+def validate_trip_has_valid_pattern(rating):
+    """
+    Validate that each trip's pattern is also present in the PAT file.
+
+    Exceptions:
+    - non revenue trips
+    """
+    valid_patterns = {
+        pattern.pattern_id
+        for pattern in rating["pat"]
+        if isinstance(pattern, parser.Pattern)
+    }
+
+    invalid_trips = (
+        trip
+        for trip in rating["trp"]
+        if isinstance(trip, parser.Trip)
+        and trip.revenue_type != parser.TripRevenueType.NON_REVENUE
+        and trip.pattern_id not in valid_patterns
+    )
+
+    for trip in invalid_trips:
+        yield ValidationError(
+            file_type="trp",
+            key=trip.trip_id,
+            error="trip_with_invalid_pattern",
+            description=f"pattern {trip.pattern_id} does not exist",
+        )
+
+
 ALL_VALIDATORS = [
+    validate_all_blocks_have_trips,
+    validate_block_leave_arrive_same_garage,
+    validate_no_extra_timepoints,
+    validate_trip_has_valid_pattern,
     validate_unique_pattern_prefix,
     validate_unique_timepoint_pattern,
-    validate_no_extra_timepoints,
-    validate_block_leave_arrive_same_garage,
-    validate_all_blocks_have_trips,
 ]
