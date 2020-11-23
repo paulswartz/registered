@@ -232,10 +232,43 @@ def validate_trip_has_valid_pattern(rating):
         )
 
 
+def validate_stop_has_only_one_timepoint(rating):
+    """
+    Stops should only have one timepoint value.
+    """
+    stop_timepoints = defaultdict(set)
+    for stop in rating["nde"]:
+        if stop.timepoint_id == "":
+            continue
+        # add the default timepoint if the stop exists in the NDE file
+        stop_timepoints[stop.stop_id].add(stop.timepoint_id)
+
+    for record in rating["pat"]:
+        if not isinstance(record, parser.PatternStop):
+            continue
+
+        if record.timepoint_id == "":
+            continue
+
+        stop_timepoints[record.stop_id].add(record.timepoint_id)
+
+    for (stop_id, timepoints) in stop_timepoints.items():
+        if len(timepoints) == 1:
+            continue
+
+        yield ValidationError(
+            file_type="pat",
+            key=stop_id,
+            error="stop_with_multiple_timepoints",
+            description=repr(timepoints),
+        )
+
+
 ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
     validate_block_leave_arrive_same_garage,
     validate_no_extra_timepoints,
+    validate_stop_has_only_one_timepoint,
     validate_trip_has_valid_pattern,
     validate_unique_pattern_prefix,
     validate_unique_timepoint_pattern,
