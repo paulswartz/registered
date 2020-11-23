@@ -3,7 +3,7 @@ CLI tool to validate a given HASTUS export for import to TransitMaster.
 """
 import argparse
 from registered.rating import Rating
-from registered import validators
+from registered.validate.validators import ALL_VALIDATORS
 
 
 def validate_rating(rating):
@@ -11,7 +11,7 @@ def validate_rating(rating):
     Validate a given Rating, printing errors and returning True if there were errors.
     """
     seen_errors = set()
-    for validator in validators.ALL_VALIDATORS:
+    for validator in ALL_VALIDATORS:
         for error in validator(rating):
             if error not in seen_errors:
                 print(error)
@@ -30,12 +30,7 @@ def main(args):
     return 0
 
 
-parser = argparse.ArgumentParser(
+PARSER = argparse.ArgumentParser(
     description="Validate the HASTUS export files (post-merge)"
 )
-parser.add_argument("DIR", help="The Combine directory where all the files live")
-
-if __name__ == "__main__":
-    import sys
-
-    sys.exit(main(parser.parse_args()))
+PARSER.add_argument("DIR", help="The Combine directory where all the files live")
