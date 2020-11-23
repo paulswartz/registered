@@ -85,10 +85,7 @@ def validate_no_extra_timepoints(rating):
     - PPAT records with an empty direction_name
     - RAD/WAD routes
     """
-    timepoints_by_route_direction = {}
-    for timepoint_pattern in rating["ppat"]:
-        key = (timepoint_pattern.route_id, timepoint_pattern.direction_name)
-        timepoints_by_route_direction[key] = set(timepoint_pattern.timepoints)
+    timepoints_by_route_direction = helpers.timepoints_by_route_direction(rating)
 
     key = None
     for record in rating["pat"]:
