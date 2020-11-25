@@ -19,6 +19,7 @@ class Rating:  # pylint: disable=too-few-public-methods
     """
 
     path = attr.ib(converter=pathlib.Path)
+    expect_all_files = attr.ib(default=True, converter=bool)
 
     def __attrs_post_init__(self):
         # pylint: disable=attribute-defined-outside-init
@@ -32,7 +33,7 @@ class Rating:  # pylint: disable=too-few-public-methods
             for path in filenames:
                 with open(path) as to_be_parsed:
                     parsed.extend(parser.parse_lines(to_be_parsed))
-            if parsed == []:
+            if parsed == [] and self.expect_all_files:
                 raise RuntimeError(
                     f"unable to find {extension.upper()} files in {self.path}"
                 )

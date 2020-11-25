@@ -198,7 +198,7 @@ def validate_all_blocks_have_trips(rating):
             if record.trip_id in revenue_trips:
                 has_revenue_trips = True
 
-    if not has_revenue_trips:
+    if not has_revenue_trips and previous_block is not None:
         yield error()
 
 

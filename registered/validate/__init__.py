@@ -8,15 +8,14 @@ from registered.validate.validators import ALL_VALIDATORS
 
 def validate_rating(rating):
     """
-    Validate a given Rating, printing errors and returning True if there were errors.
+    Validate a given Rating, yielding errors.
     """
     seen_errors = set()
     for validator in ALL_VALIDATORS:
         for error in validator(rating):
             if error not in seen_errors:
-                print(error)
+                yield error
                 seen_errors.add(error)
-    return seen_errors != set()
 
 
 def main(args):
@@ -24,10 +23,12 @@ def main(args):
     Entrypoint for the CLI tool.
     """
     path = args.DIR
-    if validate_rating(Rating(path)):
-        return 1
+    exit_code = 0
+    for error in validate_rating(Rating(path)):
+        print(error)
+        exit_code = 1
 
-    return 0
+    return exit_code
 
 
 PARSER = argparse.ArgumentParser(
