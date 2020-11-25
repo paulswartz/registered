@@ -37,6 +37,7 @@ def test_parser_PAT_TPS():
     lines = [
         "PAT;   90;0090_0047;Inbound   ; 4;907     ;1;_       ;Davis Station - Assembly Row",
         "TPS;5104    ;davis ;907     ;1; ",
+        "TPS;00009   ;arbor ;        ;X; ",
     ]
     expected = [
         parser.Pattern(
@@ -51,7 +52,13 @@ def test_parser_PAT_TPS():
             stop_id="5104",
             timepoint_id="davis",
             sign_code=907,
-            is_timepoint=True,
+            revenue_type=parser.TripRevenueType.REVENUE,
+        ),
+        parser.PatternStop(
+            stop_id="00009",
+            timepoint_id="arbor",
+            sign_code=None,
+            revenue_type=parser.TripRevenueType.OPPORTUNITY,
         ),
     ]
     actual = list(parser.parse_lines(lines))

@@ -1,0 +1,5 @@
+pattern_stop_without_node
+002610020
+507
+099030003
+00009

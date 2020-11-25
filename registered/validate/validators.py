@@ -110,7 +110,7 @@ def validate_no_extra_timepoints(rating):
         if key is None or key not in timepoints_by_route_direction:
             # missing route/directions already provided a ValidationError above
             continue
-        if not record.is_timepoint:
+        if record.revenue_type != parser.TripRevenueType.REVENUE:
             continue
 
         timepoint = record.timepoint_id
@@ -329,11 +329,36 @@ def validate_all_routes_have_patterns(rating):
         )
 
 
+def validate_pattern_stop_has_node(rating):
+    """
+    All PatternStop records should exist in the NDE file.
+    """
+    valid_stops = {stop.stop_id for stop in rating["nde"]}
+
+    pattern = None
+    for record in rating["pat"]:
+        if isinstance(record, parser.Pattern):
+            pattern = record
+            continue
+
+        if not isinstance(record, parser.PatternStop):
+            continue
+
+        if record.stop_id not in valid_stops:
+            yield ValidationError(
+                file_type="pat",
+                key=(pattern.pattern_id, record.stop_id),
+                error="pattern_stop_without_node",
+                description=f"stop {record.stop_id} not in NDE file",
+            )
+
+
 ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
     validate_all_routes_have_patterns,
     validate_block_leave_arrive_same_garage,
     validate_no_extra_timepoints,
+    validate_pattern_stop_has_node,
     validate_stop_has_only_one_timepoint,
     validate_timepoints_in_consistent_order,
     validate_trip_has_valid_pattern,

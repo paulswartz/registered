@@ -35,7 +35,7 @@ def optional(cls):
     """
 
     def converter(string_or_instance):
-        if isinstance(string_or_instance, cls):
+        if string_or_instance is None or isinstance(string_or_instance, cls):
             return string_or_instance
 
         if string_or_instance.strip() == "":
@@ -171,15 +171,15 @@ class PatternStop:  # pylint: disable=too-few-public-methods
     stop_id = attr.ib(converter=strip_whitespace)
     timepoint_id = attr.ib(converter=strip_whitespace)
     sign_code = attr.ib(converter=optional(int))
-    is_timepoint = attr.ib(converter=boolean_integer)
+    revenue_type = attr.ib(converter=TripRevenueType.for_trip)
 
     @classmethod
     def from_line(cls, parts):
         """
         Convert a list of parts to a PatternStop
         """
-        [stop_id, timepoint_id, sign_code, is_timepoint, _a] = parts
-        return cls(stop_id, timepoint_id, sign_code, is_timepoint)
+        [stop_id, timepoint_id, sign_code, revenue_type, _a] = parts
+        return cls(stop_id, timepoint_id, sign_code, revenue_type)
 
 
 @attr.s
