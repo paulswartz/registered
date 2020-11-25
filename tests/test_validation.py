@@ -4,13 +4,14 @@ from registered import rating, validate
 
 VALID_TESTS_DIR = Path(__file__).parent / "support" / "validation" / "valid"
 INVALID_TESTS_DIR = Path(__file__).parent / "support" / "validation" / "invalid"
+GLOB = "[!.]*"
 
 
 def basename(path):
     return path.name
 
 
-@pytest.mark.parametrize("path", VALID_TESTS_DIR.glob("*"), ids=basename)
+@pytest.mark.parametrize("path", VALID_TESTS_DIR.glob(GLOB), ids=basename)
 def test_valid_ratings(path):
     """
     Tests that the given ratings are treated as valid.
@@ -19,7 +20,7 @@ def test_valid_ratings(path):
     assert errors == [], f"expected to see no validation errors in {path}"
 
 
-@pytest.mark.parametrize("path", INVALID_TESTS_DIR.glob("*"), ids=basename)
+@pytest.mark.parametrize("path", INVALID_TESTS_DIR.glob(GLOB), ids=basename)
 def test_invalid_ratings(path):
     """
     Tests that the given ratings are treated as invalid.
