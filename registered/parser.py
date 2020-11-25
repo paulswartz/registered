@@ -410,6 +410,25 @@ class TripTime:  # pylint: disable=too-few-public-methods
         return cls(time_str)
 
 
+@attr.s
+class Route:  # pylint: disable=too-few-public-methods
+    """
+    A user-facing group of trips.
+    """
+
+    route_id = attr.ib(converter=strip_whitespace)
+    route_type = attr.ib(converter=strip_whitespace)
+    vehicle_type = attr.ib(converter=strip_whitespace)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts to a TripTime.
+        """
+        [route_id, _a, route_type, _b, vehicle_type, *_rest] = parts
+        return cls(route_id, route_type, vehicle_type)
+
+
 TAG_TO_CLASS = {
     "PAT": Pattern,
     "TPS": PatternStop,
@@ -422,4 +441,5 @@ TAG_TO_CLASS = {
     "TIN": TripIdentifier,
     "TRP": Trip,
     "PTS": TripTime,
+    "RTE": Route,
 }

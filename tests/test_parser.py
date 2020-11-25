@@ -195,3 +195,17 @@ def test_parser_TRP():
     actual = list(parser.parse_lines(lines))
 
     assert actual == expected
+
+
+def test_parser_RTE():
+    lines = [
+        "RTE;   04;   04;Regular   ; 0;Bus       ; 0",
+        "RTE;9903 ;9903 ;Regular   ; 0;Bus       ; 0;9903",
+    ]
+    expected = [
+        parser.Route(route_id="04", route_type="Regular", vehicle_type="Bus"),
+        parser.Route(route_id="9903", route_type="Regular", vehicle_type="Bus"),
+    ]
+    actual = list(parser.parse_lines(lines))
+
+    assert actual == expected
