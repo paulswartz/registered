@@ -307,8 +307,31 @@ def validate_stop_has_only_one_timepoint(rating):
         )
 
 
+def validate_all_routes_have_patterns(rating):
+    """
+    All routes (RTE file) should have at least one pattern.
+    """
+    routes = {route.route_id for route in rating["rte"]}
+
+    routes_from_patterns = {
+        record.route_id
+        for record in rating["pat"]
+        if isinstance(record, parser.Pattern)
+    }
+
+    missing_routes = routes - routes_from_patterns
+    for route_id in missing_routes:
+        yield ValidationError(
+            file_type="rte",
+            key=route_id,
+            error="route_without_patterns",
+            description="route has no patterns in PAT file",
+        )
+
+
 ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
+    validate_all_routes_have_patterns,
     validate_block_leave_arrive_same_garage,
     validate_no_extra_timepoints,
     validate_stop_has_only_one_timepoint,
