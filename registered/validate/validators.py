@@ -123,6 +123,49 @@ def validate_no_extra_timepoints(rating):
             )
 
 
+def validate_timepoints_in_consistent_order(rating):
+    """
+    Timepoints in PAT should be in the same order as in PPAT for a given route/direction.
+    """
+    timepoints_by_route_direction = helpers.timepoints_by_route_direction(rating)
+
+    pattern = None
+    timepoints = []
+
+    def validate_timepoints():
+        key = (pattern.route_id, pattern.direction_name)
+        expected_timepoints = timepoints_by_route_direction.get(key, [])
+
+        if expected_timepoints == []:
+            return  # pylint: disable
+
+        if not helpers.same_list_order(expected_timepoints, timepoints):
+            yield ValidationError(
+                file_type="pat",
+                key=pattern.pattern_id,
+                error="timepoints_out_of_order",
+                description=(
+                    f"expected timepoint order: {repr(expected_timepoints)} "
+                    f"actual timepoint order: {repr(timepoints)}"
+                ),
+            )
+
+    for record in rating["pat"]:
+        if isinstance(record, parser.Pattern):
+            if pattern:
+                yield from validate_timepoints()
+
+            pattern = record
+            timepoints = []
+            continue
+
+        if isinstance(record, parser.PatternStop) and record.timepoint_id:
+            timepoints.append(record.timepoint_id)
+
+    if pattern:
+        yield from validate_timepoints()
+
+
 def validate_block_leave_arrive_same_garage(rating):
     """
     Validate that each block leaves/arrives from the same garage.
@@ -269,6 +312,7 @@ ALL_VALIDATORS = [
     validate_block_leave_arrive_same_garage,
     validate_no_extra_timepoints,
     validate_stop_has_only_one_timepoint,
+    validate_timepoints_in_consistent_order,
     validate_trip_has_valid_pattern,
     validate_unique_pattern_prefix,
     validate_unique_timepoint_pattern,
