@@ -166,9 +166,25 @@ def validate_timepoints_in_consistent_order(rating):
         yield from validate_timepoints()
 
 
-def validate_block_leave_arrive_same_garage(rating):
+VALID_GARAGES = {
+    "albny",
+    "arbor",
+    "cabot",
+    "charl",
+    "fell",
+    "lynn",
+    "ncamb",
+    "prwb",
+    "soham",
+    "qubus",
+    "somvl",
+    "wondw",
+}
+
+
+def validate_block_garages(rating):
     """
-    Validate that each block leaves/arrives from the same garage.
+    Validate that each block leaves/arrives from the same, valid, garage.
 
     Exceptions:
     - Lynn -> Wonderland
@@ -180,6 +196,15 @@ def validate_block_leave_arrive_same_garage(rating):
 
         (first_garage, _) = record.times[0]
         (last_garage, _) = record.times[-1]
+
+        for garage in [first_garage, last_garage]:
+            if garage not in VALID_GARAGES:
+                yield ValidationError(
+                    file_type="blk",
+                    key=(record.block_id, record.service_key),
+                    error="block_with_invalid_garage",
+                    description=f"{garage} is not a valid garage",
+                )
 
         if first_garage != last_garage and (first_garage, last_garage) not in {
             ("lynn", "wondw"),
@@ -411,7 +436,7 @@ ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
     validate_all_blocks_have_runs,
     validate_all_routes_have_patterns,
-    validate_block_leave_arrive_same_garage,
+    validate_block_garages,
     validate_no_extra_timepoints,
     validate_pattern_stop_has_node,
     validate_routes_have_two_directions,
