@@ -147,8 +147,8 @@ def test_parser_VSC_BLK_TIN():
             description="Albany Weekday",
         ),
         parser.Block(
-            run_id="A57-11",
-            block_id="4245117",
+            block_id="A57-11",
+            block_run_id="4245117",
             times=[
                 ("albny", time(4, 15)),
                 ("wtryd", time(4, 30)),

@@ -330,8 +330,8 @@ class Block:  # pylint: disable=too-few-public-methods
     A block: a group of trips for a single vehicle.
     """
 
-    run_id = attr.ib(converter=strip_whitespace)
     block_id = attr.ib(converter=strip_whitespace)
+    block_run_id = attr.ib(converter=strip_whitespace)
     times = attr.ib(converter=strip_times)
 
     @classmethod
@@ -339,8 +339,8 @@ class Block:  # pylint: disable=too-few-public-methods
         """
         Convert a list of parts to a Block.
         """
-        [run_id, block_id, _, *times, _, _, _, _, _, _] = parts
-        return cls(run_id, block_id, times)
+        [block_id, block_run_id, _, *times, _, _, _, _, _, _] = parts
+        return cls(block_id, block_run_id, times)
 
 
 @attr.s
