@@ -382,8 +382,34 @@ def validate_routes_have_two_directions(rating):
         )
 
 
+def validate_all_blocks_have_runs(rating):
+    """
+    Each block in the BLK file should have at least one Piece in the CRW file.
+    """
+    piece_id_service_keys = {
+        (piece.piece_id, piece.service_key)
+        for piece in rating["crw"]
+        if isinstance(piece, parser.Piece)
+    }
+
+    for block in rating["blk"]:
+        if not isinstance(block, parser.Block):
+            continue
+
+        if (block.piece_id, block.service_key) in piece_id_service_keys:
+            continue
+
+        yield ValidationError(
+            file_type="blk",
+            error="block_without_runs",
+            key=(block.piece_id, block.service_key),
+            description="No pieces found.",
+        )
+
+
 ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
+    validate_all_blocks_have_runs,
     validate_all_routes_have_patterns,
     validate_block_leave_arrive_same_garage,
     validate_no_extra_timepoints,
