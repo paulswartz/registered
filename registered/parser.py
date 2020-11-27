@@ -331,16 +331,17 @@ class Block:  # pylint: disable=too-few-public-methods
     """
 
     block_id = attr.ib(converter=strip_whitespace)
-    block_run_id = attr.ib(converter=strip_whitespace)
+    piece_id = attr.ib(converter=strip_whitespace)
     times = attr.ib(converter=strip_times)
+    service_key = attr.ib(converter=lambda x: strip_whitespace(x)[-3:])
 
     @classmethod
     def from_line(cls, parts):
         """
         Convert a list of parts to a Block.
         """
-        [block_id, block_run_id, _, *times, _, _, _, _, _, _] = parts
-        return cls(block_id, block_run_id, times)
+        [block_id, piece_id, _, *times, _, _, _, service_key, _, _] = parts
+        return cls(block_id, piece_id, times, service_key)
 
 
 @attr.s
@@ -429,6 +430,46 @@ class Route:  # pylint: disable=too-few-public-methods
         return cls(route_id, route_type, vehicle_type)
 
 
+@attr.s
+class CrewSchedule:  # pylint: disable=too-few-public-methods
+    """
+    A group of pieces of work
+    """
+
+    service_key = attr.ib(converter=lambda x: strip_whitespace(x)[-3:])
+    day_type = attr.ib(converter=strip_whitespace)
+    garage_name = attr.ib(converter=strip_whitespace)
+    description = attr.ib(converter=strip_whitespace)
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts into a Crew Schedule.
+        """
+        [service, day_type, _a, _b, _c, garage_name, description] = parts
+        return cls(service, day_type, garage_name, description)
+
+
+@attr.s
+class Piece:  # pylint: disable=too-few-public-methods
+    """
+    A piece of work performed by a single driver.
+    """
+
+    run_id = attr.ib(converter=strip_whitespace)
+    piece_id = attr.ib(converter=strip_whitespace)
+    times = attr.ib(converter=strip_times)
+    service_key = attr.ib(converter=lambda x: strip_whitespace(x)[-3:])
+
+    @classmethod
+    def from_line(cls, parts):
+        """
+        Convert a list of parts into a Piece.
+        """
+        [run_id, _a, _b, piece_id, _c, *times, service_key, _d, _e] = parts
+        return cls(run_id, piece_id, times, service_key)
+
+
 TAG_TO_CLASS = {
     "PAT": Pattern,
     "TPS": PatternStop,
@@ -442,4 +483,6 @@ TAG_TO_CLASS = {
     "TRP": Trip,
     "PTS": TripTime,
     "RTE": Route,
+    "CSC": CrewSchedule,
+    "PCE": Piece,
 }

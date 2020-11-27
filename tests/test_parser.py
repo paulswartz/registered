@@ -148,7 +148,8 @@ def test_parser_VSC_BLK_TIN():
         ),
         parser.Block(
             block_id="A57-11",
-            block_run_id="4245117",
+            piece_id="4245117",
+            service_key="021",
             times=[
                 ("albny", time(4, 15)),
                 ("wtryd", time(4, 30)),
@@ -212,6 +213,35 @@ def test_parser_RTE():
     expected = [
         parser.Route(route_id="04", route_type="Regular", vehicle_type="Bus"),
         parser.Route(route_id="9903", route_type="Regular", vehicle_type="Bus"),
+    ]
+    actual = list(parser.parse_lines(lines))
+
+    assert actual == expected
+
+
+def test_parser_CSC_PCE():
+    lines = [
+        "CSC;aba11011;Weekday   ; 0;02;BUS12021  ;Albny   ;Albany Weekday REMAKE                                                           ",
+        "PCE;123-1501 ;   9911631;12345  ;   4484646;    1;albny ;0405a;albny ;0415a;albny ;0919a;albny ;0919a;011;;",
+    ]
+    expected = [
+        parser.CrewSchedule(
+            service_key="011",
+            day_type="Weekday",
+            garage_name="Albny",
+            description="Albany Weekday REMAKE",
+        ),
+        parser.Piece(
+            service_key="011",
+            run_id="123-1501",
+            piece_id="4484646",
+            times=[
+                ("albny", time(4, 5)),
+                ("albny", time(4, 15)),
+                ("albny", time(9, 19)),
+                ("albny", time(9, 19)),
+            ],
+        ),
     ]
     actual = list(parser.parse_lines(lines))
 

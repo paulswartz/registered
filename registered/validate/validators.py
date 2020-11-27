@@ -187,7 +187,7 @@ def validate_block_leave_arrive_same_garage(rating):
         }:
             yield ValidationError(
                 file_type="blk",
-                key=(record.run_id, record.block_id),
+                key=(record.block_id, record.service_key),
                 error="block_with_different_garage",
                 description=f"leaves from {first_garage}, arrives at {last_garage}",
             )
@@ -214,14 +214,14 @@ def validate_all_blocks_have_trips(rating):
     def error():
         return ValidationError(
             file_type="blk",
-            key=(previous_block.run_id, previous_block.block_id),
+            key=(previous_block.block_id, previous_block.service_key),
             error="block_with_no_trips",
             description="Block has no/only non-revenue trips",
         )
 
     for record in rating["blk"]:
         if isinstance(record, parser.Block):
-            if "rad" in record.run_id or "wad" in record.run_id:
+            if "rad" in record.block_id or "wad" in record.block_id:
                 # don't need to validate RAD/WAD trips.
                 previous_block = None
                 has_revenue_trips = False
