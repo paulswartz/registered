@@ -353,12 +353,42 @@ def validate_pattern_stop_has_node(rating):
             )
 
 
+def validate_routes_have_two_directions(rating):
+    """
+    Each route in the PPAT file should have two directions.
+
+    Exceptions:
+    - 171
+    - rad
+    - wad
+    """
+    routes_to_directions = defaultdict(set)
+
+    for trip_pattern in rating["ppat"]:
+        if trip_pattern.route_id in {"171", "rad", "wad"}:
+            continue
+
+        routes_to_directions[trip_pattern.route_id].add(trip_pattern.direction_name)
+
+    for (route_id, direction_names) in routes_to_directions.items():
+        if len(direction_names) == 2:
+            continue
+
+        yield ValidationError(
+            file_type="ppat",
+            key=route_id,
+            error="route_with_one_direction",
+            description=f"has direction {repr(direction_names)}",
+        )
+
+
 ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
     validate_all_routes_have_patterns,
     validate_block_leave_arrive_same_garage,
     validate_no_extra_timepoints,
     validate_pattern_stop_has_node,
+    validate_routes_have_two_directions,
     validate_stop_has_only_one_timepoint,
     validate_timepoints_in_consistent_order,
     validate_trip_has_valid_pattern,
