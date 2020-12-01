@@ -273,9 +273,6 @@ class Stop:  # pylint: disable=too-few-public-methods,too-many-instance-attribut
         if self.easting_ft is None or self.northing_ft is None:
             return None
 
-        # international_ft_to_m = 0.3048
-        # easting_m = self.easting_ft * international_ft_to_m
-        # northing_m = self.northing_ft * international_ft_to_m
         return STATE_PLANE_2001_TO_WGS84_TRANSFORMER.transform(
             self.easting_ft, self.northing_ft
         )

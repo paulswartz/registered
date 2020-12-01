@@ -1,5 +1,0 @@
-[requires]
-python_version = "3.9.0"
-
-[scripts]
-merge = "python -m registered.merge"

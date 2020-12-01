@@ -23,6 +23,7 @@ lint = "python -m pylint registered --extension-pkg-whitelist=pyodbc"
 test = "python -m pytest tests"
 calendar = "python -m registered.calendar"
 stop_comparison = "python -m registered.stop_comparison"
+location_comparison = "python -m registered.location_comparison"
 merge = "python -m registered.merge"
 validate = "python -m registered.validate"
 
