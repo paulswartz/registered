@@ -427,7 +427,7 @@ def validate_all_blocks_have_runs(rating):
         yield ValidationError(
             file_type="blk",
             error="block_without_runs",
-            key=(block.piece_id, block.service_key),
+            key=(block.block_id, block.service_key),
             description="No pieces found.",
         )
 
