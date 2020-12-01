@@ -432,10 +432,36 @@ def validate_all_blocks_have_runs(rating):
         )
 
 
+def validate_all_runs_have_blocks(rating):
+    """
+    Each block in the BLK file should have at least one Piece in the CRW file.
+    """
+    piece_id_service_keys = {
+        (block.piece_id, block.service_key)
+        for block in rating["blk"]
+        if isinstance(block, parser.Block)
+    }
+
+    for piece in rating["crw"]:
+        if not isinstance(piece, parser.Piece):
+            continue
+
+        if (piece.piece_id, piece.service_key) in piece_id_service_keys:
+            continue
+
+        yield ValidationError(
+            file_type="crw",
+            error="run_without_blocks",
+            key=(piece.run_id, piece.service_key),
+            description="No blocks found.",
+        )
+
+
 ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
     validate_all_blocks_have_runs,
     validate_all_routes_have_patterns,
+    validate_all_runs_have_blocks,
     validate_block_garages,
     validate_no_extra_timepoints,
     validate_pattern_stop_has_node,
