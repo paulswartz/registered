@@ -48,8 +48,8 @@ def geo_node(abbrs):  # pylint: disable=inconsistent-return-statements
     question_marks = ", ".join("?" for _ in abbrs)
     result = cursor.execute(
         "SELECT GEO_NODE_ABBR,GEO_NODE_NAME,"
-        "COALESCE(MAP_LATITUDE, MDT_LATITUDE)/10000000,"
-        "COALESCE(MAP_LONGITUDE, MDT_LONGITUDE)/10000000 "
+        "MDT_LATITUDE/10000000,"
+        "MDT_LONGITUDE/10000000 "
         "FROM GEO_NODE "
         f"WHERE GEO_NODE_ABBR IN ({question_marks});",
         list(abbrs),
