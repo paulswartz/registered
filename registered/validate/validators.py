@@ -384,13 +384,14 @@ def validate_routes_have_two_directions(rating):
 
     Exceptions:
     - 171
+    - 195
     - rad
     - wad
     """
     routes_to_directions = defaultdict(set)
 
     for trip_pattern in rating["ppat"]:
-        if trip_pattern.route_id in {"171", "rad", "wad"}:
+        if trip_pattern.route_id in {"171", "195", "rad", "wad"}:
             continue
 
         routes_to_directions[trip_pattern.route_id].add(trip_pattern.direction_name)
