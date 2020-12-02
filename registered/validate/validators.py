@@ -2,6 +2,7 @@
 Collection of validators for rating data.
 """
 from collections import defaultdict
+import itertools
 import attr
 from registered import parser
 from registered.validate import helpers
@@ -458,12 +459,56 @@ def validate_all_runs_have_blocks(rating):
         )
 
 
+def validate_calendar_exceptions_have_unique_runs(rating):
+    """
+    Validate that each used exception combo has unique run IDs.
+
+    Inside TransitMaster, we only use the last 3 digits of the service ID to
+    identify which blocks/runs are active. Inside HASTUS, the schedulers need
+    to be aware of this, so that those groups use a unique set of runs. If they
+    are not, it can cause an issue where overlapping runs are activated inside
+    TM on a particular date, causing lots of problems.
+    """
+    calendar_dates_to_exceptions = defaultdict(set)
+    for record in rating["cal"]:
+        if not isinstance(record, parser.CalendarDate):
+            continue
+        if record.service_key == "":
+            # Service not active on the date
+            continue
+        calendar_dates_to_exceptions[record.date].add(record.service_key)
+    possible_exceptions = {
+        frozenset(combo) for combo in calendar_dates_to_exceptions.values()
+    }
+
+    runs_by_service_key = defaultdict(set)
+    for record in rating["crw"]:
+        if not isinstance(record, parser.Piece):
+            continue
+
+        runs_by_service_key[record.service_key].add(record.run_id)
+
+    for combo in possible_exceptions:
+        if len(combo) == 1:
+            continue
+        for (fst, snd) in itertools.combinations(combo, 2):
+            overlaps = runs_by_service_key[fst] & runs_by_service_key[snd]
+            for run_id in overlaps:
+                yield ValidationError(
+                    file_type="crw",
+                    error="calendar_exception_with_duplicate_runs",
+                    key=run_id,
+                    description=f"used by services: {fst}, {snd}",
+                )
+
+
 ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
     validate_all_blocks_have_runs,
     validate_all_routes_have_patterns,
     validate_all_runs_have_blocks,
     validate_block_garages,
+    validate_calendar_exceptions_have_unique_runs,
     validate_no_extra_timepoints,
     validate_pattern_stop_has_node,
     validate_routes_have_two_directions,
