@@ -30,7 +30,7 @@ MERGE_DIRECTORIES = [
     "SohamDR",
 ]
 
-MERGE_EXTENSIONS = ["nde", "plc", "rte", "trp", "pat", "ppat", "blk", "crw"]
+MERGE_EXTENSIONS = ["nde", "plc", "rte", "trp", "pat", "ppat", "blk", "crw", "cal"]
 
 
 def fast_merge(input_filenames, output_filename, extra=""):
