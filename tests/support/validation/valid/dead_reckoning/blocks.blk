@@ -1,0 +1,6 @@
+VSC;hbf35st1;Weekday   ; 0;01;BUSN35  ;Fells   ;Fellsway Siemens Test Route             
+BLK;    F0001;    830006;12345  ;fells ;500a ;fepl1 ;500a ;fepl1 ;104x ;fells ;104x ;    ;    ;        ;ST1;       1;12345  
+TIN;   6417975
+VSC;hbs45dr1;Weekday   ; 0;01;BUSS45  ;Soham   ;746 Dummy Run 106                       
+BLK;  S746_-1;    873000;12345  ;soust ;500a ;soust ;500a ;soust ;115x ;soust ;115x ;    ;    ;        ;DR1;746_-  1;12345  
+TIN;   6673151

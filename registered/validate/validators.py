@@ -190,9 +190,13 @@ def validate_block_garages(rating):
     Exceptions:
     - Lynn -> Wonderland
     - Wonderland -> Lynn
+    - dead reckoning schedules (ST1, DR1)
     """
     for record in rating["blk"]:
         if not isinstance(record, parser.Block):
+            continue
+
+        if record.service_key in {"ST1", "DR1"}:
             continue
 
         (first_garage, _) = record.times[0]
