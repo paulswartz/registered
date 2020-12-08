@@ -110,17 +110,24 @@ def merge_extension(path, prefix, extension):
     fast_merge(files_to_merge, output_filename, extra)
 
 
+def merge_combine(path):
+    """
+    Merge files with the relevant extensions in a Combine directory.
+    """
+    prefix = path.parent.name
+    for extension in MERGE_EXTENSIONS:
+        merge_extension(path, prefix, extension)
+
+
 def main(args):
     """
     Entrypoint for running merge as a CLI tool.
     """
-    path = pathlib.Path(args.DIR)
+    path = pathlib.Path(args["DIR"])
     if path.name.lower() != "combine":
         raise RuntimeError("expected a Combine directory")
 
-    prefix = path.parent.name
-    for extension in MERGE_EXTENSIONS:
-        merge_extension(path, prefix, extension)
+    merge_combine(path)
 
 
 parser = argparse.ArgumentParser(

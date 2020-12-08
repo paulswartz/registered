@@ -18,17 +18,26 @@ def validate_rating(rating):
                 seen_errors.add(error)
 
 
-def main(args):
+def validate_path(path):
     """
-    Entrypoint for the CLI tool.
+    Validate a gvien path.
+
+    Returns 0 if the path is valid, 1 (and prints the errors) otherwise.
     """
-    path = args.DIR
     exit_code = 0
     for error in validate_rating(Rating(path)):
         print(error)
         exit_code = 1
 
     return exit_code
+
+
+def main(args):
+    """
+    Entrypoint for the CLI tool.
+    """
+    path = args.DIR
+    return validate_path(path)
 
 
 PARSER = argparse.ArgumentParser(
