@@ -22,6 +22,18 @@ $ pip install pipenv
 $ pipenv install  # --dev if you want to do development on the scripts
 ```
 
+## HASTUS sync_hastus
+
+Sync a HASTUS export to the TransitMaster server, validating the data in the process.
+
+- Writes the data to `support/ratings/*` for later processing if needed.
+- Will prompt for your AD password, or you can put it in the `AD_PASSWORD` environment
+  variable.
+
+```
+$ pipenv run hastus_sync
+```
+
 ## Merge
 
 Merge a set of rating files together in the Combine directory.
