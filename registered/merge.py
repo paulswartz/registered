@@ -77,9 +77,10 @@ def dedup_prefix(files_to_merge):
             most_recent[filename] = (index, filename)
             continue
         date = datetime.strptime(date_str, "%d%m%Y").date()
-        if prefix not in most_recent_date or most_recent_date[prefix] < date:
-            most_recent_date[prefix] = date
-            most_recent[prefix] = (index, filename)
+        key = (prefix, path.suffix.lower())
+        if key not in most_recent_date or most_recent_date[key] < date:
+            most_recent_date[key] = date
+            most_recent[key] = (index, filename)
 
     return [filename for (_, filename) in sorted(most_recent.values())]
 
