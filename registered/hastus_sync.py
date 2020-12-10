@@ -42,7 +42,7 @@ def configure_smb(args):
     """
     Configure the SMB client, prompting for username/password if needed.
     """
-    username = args.username or os.environ.get("USERNAME")
+    username = args.username or os.environ.get("USERNAME") or os.environ.get("USER")
     password = os.environ.get("AD_PASSWORD")
     questions = []
     if not username:
@@ -97,7 +97,7 @@ def prompt_hastus_export():
             "message": "Choose a HASTUS export to use:",
         }
     ]
-    return prompt(questions)["hastus_export"]
+    return prompt(questions).get("hastus_export")
 
 
 def calculate_rating_folder(args):
@@ -263,10 +263,13 @@ def main(args):
     configure_smb(args)
     if args.hastus_export is None:
         args.hastus_export = prompt_hastus_export()
+    if not args.hastus_export:
+        return 1
+
     if args.rating_folder is None:
         args.rating_folder = calculate_rating_folder(args)
-        if args.rating_folder is None:
-            return 1
+    if args.rating_folder is None:
+        return 1
 
     if sync_hastus(args):
         return 0
