@@ -123,7 +123,7 @@ def main(args):
     """
     Entrypoint for running merge as a CLI tool.
     """
-    path = pathlib.Path(args["DIR"])
+    path = pathlib.Path(args.DIR)
     if path.name.lower() != "combine":
         raise RuntimeError("expected a Combine directory")
 
