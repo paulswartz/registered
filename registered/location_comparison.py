@@ -8,8 +8,16 @@ from registered.db import geo_node
 
 GEOD = Geod(ellps="WGS84")
 
+
 def google_street_view_url(lat, lon):
+    """
+    Generate a Google Street View URL for a given lat/lon.
+
+    Documentation:
+    https://developers.google.com/maps/documentation/urls/get-started#street-view-action
+    """
     return f"https://www.google.com/maps/@?api=1&map_action=pano&viewpoint={lat},{lon}"
+
 
 def main(args):
     """
@@ -28,7 +36,10 @@ def main(args):
         for (stop_id, _, lat, lon) in geo_node(stop_ids)
         if lat and lon
     }
-    print("stop_id,stop_name,hastus_lat,hastus_lon,tm_lat,tm_lon,distance_m,hastus_street_view,tm_street_view")
+    print(
+        "stop_id,stop_name,hastus_lat,hastus_lon,tm_lat,tm_lon,distance_m,"
+        "hastus_street_view,tm_street_view"
+    )
     for stop_id in sorted(stop_ids, key=int):
         stop = stops[stop_id]
         (lat, lon) = stop.latlon()
@@ -39,7 +50,12 @@ def main(args):
             distance = f"{int(distance)}"
         else:
             distance = ""
-        print(f"{stop_id},{stop.name}," f"{lat:.6f},{lon:.6f},{tm_lat:.6f},{tm_lon:.6f},{distance},\"{google_street_view_url(lat,lon)}\",\"{google_street_view_url(tm_lat,tm_lon)}\"")
+        print(
+            f"{stop_id},{stop.name},"
+            f"{lat:.6f},{lon:.6f},{tm_lat:.6f},{tm_lon:.6f},{distance},"
+            f'"{google_street_view_url(lat,lon)}"',
+            f'"{google_street_view_url(tm_lat,tm_lon)}"',
+        )
 
 
 parser = argparse.ArgumentParser(
