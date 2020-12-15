@@ -14,7 +14,7 @@ import sys
 import smbclient
 import smbclient.shutil
 from PyInquirer import prompt
-from registered import merge, parser, validate
+from registered import calendar, merge, parser, validate
 
 SEASONS = {
     "Winter": 0,
@@ -113,9 +113,9 @@ def calculate_rating_folder(args):
     with smbclient.open_file(
         smb_path(HASTUS, "KKO", args.hastus_export, calendar_file)
     ) as cal_file:
-        (calendar,) = itertools.islice(parser.parse_lines(cal_file), 0, 1)
+        (cal_record,) = itertools.islice(parser.parse_lines(cal_file), 0, 1)
     season = [season for season in SEASONS if season in args.hastus_export][0]
-    rating_folder = calendar.start_date.strftime(f"{season}%m%d%Y")
+    rating_folder = cal_record.start_date.strftime(f"{season}%m%d%Y")
     questions = [
         {
             "type": "input",
@@ -199,6 +199,14 @@ def pull_prior_versions(tempdir):
     )
 
 
+def schedules_per_garage(tempdir):
+    """
+    Calculate and write the schedules_per_garage.csv file in Supporting.
+    """
+    with open(tempdir / "Supporting" / "schedules_per_garage.csv", "w") as file:
+        calendar.main_combine(tempdir / "Combine" / "HASTUS_export", file=file)
+
+
 def push_directory(args, tempdir):
     """
     Push the local merged rating to the TransitMaster server.
@@ -251,6 +259,7 @@ def sync_hastus(args):
         if return_code != 0:
             return return_code
     pull_prior_versions(tempdir)
+    schedules_per_garage(tempdir)
     if args.push:
         push_directory(args, tempdir)
     return 0

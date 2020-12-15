@@ -1,6 +1,7 @@
 """
 CLI tool to output the calendar for each garage
 """
+import sys
 import argparse
 from registered.rating import Rating
 from registered.parser import CalendarDate
@@ -32,13 +33,22 @@ def calendar(rating):
         yield [date_str, *garage_values]
 
 
+def main_combine(path, file=sys.stdout):
+    """
+    Print the output from the calendar function.
+
+    Optionally takes a file to write to (default: stdout)
+    """
+    for row in calendar(Rating(path)):
+        print(",".join(row), file=file)
+
+
 def main(args):
     """
     Entrypoint for the CLI tool.
     """
     path = args.DIR
-    for row in calendar(Rating(path)):
-        print(",".join(row))
+    main_combine(path)
 
 
 parser = argparse.ArgumentParser(
