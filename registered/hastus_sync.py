@@ -14,14 +14,7 @@ import sys
 import smbclient
 import smbclient.shutil
 from PyInquirer import prompt
-from registered import calendar, merge, parser, validate
-
-SEASONS = {
-    "Winter": 0,
-    "Spring": 1,
-    "Summer": 2,
-    "Fall": 3,
-}
+from registered import calendar, merge, parser, seasons, validate
 
 HASTUS = "hshastf1"
 TRANSITMASTER = "hstmtest01"
@@ -62,26 +55,12 @@ def available_hastus_exports():
     """
     Return the available HASTUS exports, sorted most-recent first.
     """
-
-    def sort_key(rating_folder):
-        """
-        Sort the HASTUS exports (which look like "Winter 2021 AVL Data").
-
-        It does this by breaking the name into a tuple ("2021", 0, "AVL Data").
-        """
-        for (season, season_key) in SEASONS.items():
-            if rating_folder.startswith(season):
-                year = rating_folder[len(season) + 1 : len(season) + 5]
-                rest = rating_folder[len(season) + 6 :]
-                return (year, season_key, rest)
-        return ("", "", 0)
-
     exports = [
         export
         for export in smbclient.listdir(smb_path(HASTUS, "KKO"))
         if "AVL" in export
     ]
-    return sorted(exports, key=sort_key, reverse=True)
+    return sorted(exports, key=seasons.sort_key_hastus_export, reverse=True)
 
 
 def prompt_hastus_export():
@@ -114,7 +93,7 @@ def calculate_rating_folder(args):
         smb_path(HASTUS, "KKO", args.hastus_export, calendar_file)
     ) as cal_file:
         (cal_record,) = itertools.islice(parser.parse_lines(cal_file), 0, 1)
-    season = [season for season in SEASONS if season in args.hastus_export][0]
+    season = seasons.season_for_date(cal_record.start_date)
     rating_folder = cal_record.start_date.strftime(f"{season}%m%d%Y")
     questions = [
         {
