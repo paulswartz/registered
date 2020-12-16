@@ -119,6 +119,8 @@ Sunday {str(self.sunday_base)}
         for record in records:
             if not isinstance(record, CalendarDate):
                 continue
+            if record.service_key == "":
+                continue
             date_to_garage_services[record.date][record.garage] = record.service_key
             day_types[record.date] = record.day_type
 
@@ -126,7 +128,6 @@ Sunday {str(self.sunday_base)}
             date: ExceptionCombination.from_garages(garages)
             for (date, garages) in date_to_garage_services.items()
         }
-
         weekday_base = cls.calculate_bases(date_to_combos, day_types, "Weekday")
         saturday_base = cls.calculate_bases(date_to_combos, day_types, "Saturday")
         sunday_base = cls.calculate_bases(date_to_combos, day_types, "Sunday")

@@ -97,6 +97,9 @@ class TestCheatSheet:
                 garage="Albny",
                 day_type="Saturday",
             ),
+            CalendarDate(
+                date=date(2020, 12, 26), service_key="", garage="Cabot", day_type=""
+            ),
         ]
         actual = CheatSheet.from_records(records)
         assert actual.season_name == "Winter"
