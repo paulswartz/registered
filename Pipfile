@@ -15,6 +15,7 @@ pytest = "*"
 black = "*"
 pylint = "*"
 atomicwrites = "*"
+pytest-watch = "*"
 
 [requires]
 python_version = "3.9"
@@ -22,7 +23,8 @@ python_version = "3.9"
 [scripts]
 format = "black registered tests"
 lint = "python -m pylint registered --extension-pkg-whitelist=pyodbc"
-test = "python -m pytest tests"
+test = "pytest tests"
+test_watch = "ptw -w --spool 500 -- --new-first"
 calendar = "python -m registered.calendar"
 hastus_sync = "python -m registered.hastus_sync"
 stop_comparison = "python -m registered.stop_comparison"
