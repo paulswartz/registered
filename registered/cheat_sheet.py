@@ -9,7 +9,7 @@ The cheat sheet has the following info:
 - base schedules (Weekday, Saturday, Sunday, and any garage-level exceptions)
 - dates with exception combinations (incl. garage if needed)
 - weekday + test/dead reckoning (ST1 DR1) on the first weekday labeled TAKE THIS OUT
-- any `l3*` tags labeled TAKE THIS OUT
+- any Level 3 / Level 4 tags labeled TAKE THIS OUT
 
 ## Example
 
@@ -109,7 +109,7 @@ class CheatSheet:
             key=lambda combo: sum(
                 1
                 for date in date_to_combos
-                if date in dates and date_to_combos[date] == combo
+                if date in dates and date_to_combos[date] == combo and not combo.should_take_out()
             ),
         )
         return base
@@ -154,15 +154,34 @@ class ExceptionCombination:
         """
         Print the services and any garage exceptions.
         """
+        suffix = ""
+        if self.should_take_out():
+            suffix = " *** TAKE THIS OUT"
         if len(self.garage_exceptions) == 0:
-            return self.service
+            return self.service + suffix
 
         exceptions = ", ".join(
             f'{service} ({", ".join(sorted(garages))})'
             for (service, garages) in sorted(self.garage_exceptions.items())
         )
 
-        return f"{self.service}, {exceptions}"
+        return f"{self.service}, {exceptions}{suffix}"
+
+    def service_keys(self):
+        """
+        Return a set of all service keys used by this combo.
+        """
+        return set(self.garage_exceptions.keys()) | {self.service}
+
+    def should_take_out(self):
+        """
+        Return true if a given combination should be removed from TransitMaster during the import.
+
+        - Level 3 or 4 service
+        - Weather-related services
+        """
+        return any(True for service in self.service_keys()
+                   if service.lower()[1] in {"3", "4"} or service.lower()[:2] in {"we", "wt", "wn"})
 
 
 def cheat_sheet(rating):

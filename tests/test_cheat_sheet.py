@@ -15,6 +15,13 @@ class TestExceptionCombination:
         )
         assert str(combo) == "016, os6 (Albny), sa6 (BennTT, Somvl)"
 
+    def test_str_take_out(self):
+        combo = ExceptionCombination(
+            "016",
+            garage_exceptions={"l36": {"Somvl"}},
+        )
+        assert str(combo) == "016, l36 (Somvl) *** TAKE THIS OUT"
+
     def test_from_garages_simple(self):
         garages = {"Albny": "011", "Arbor": "011"}
         expected = ExceptionCombination("011")
@@ -45,6 +52,14 @@ class TestExceptionCombination:
         actual = ExceptionCombination.from_garages(garages)
 
         assert expected == actual
+
+    def test_should_take_out(self):
+        assert ExceptionCombination("011").should_take_out() == False
+        assert ExceptionCombination("l31").should_take_out()
+        assert ExceptionCombination("a31").should_take_out()
+        assert ExceptionCombination("b41").should_take_out()
+        assert ExceptionCombination("we1").should_take_out()
+        assert ExceptionCombination("016", garage_exceptions={"l36": {"Somvl"}}).should_take_out()
 
 
 class TestCheatSheet:
