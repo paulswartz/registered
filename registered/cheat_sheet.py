@@ -38,6 +38,8 @@ import sys
 import argparse
 from collections import defaultdict
 from datetime import timedelta
+import itertools
+import operator
 import attr
 from registered.rating import Rating
 from registered.parser import CalendarDate
@@ -74,10 +76,26 @@ class CheatSheet:
             (first_weekday, f"{str(self.weekday_base)} DR1 ST1 *** TAKE THIS OUT")
         )
         date_combos.sort()
+        exceptions = []
+        for (combo, date_group) in itertools.groupby(
+            date_combos, key=operator.itemgetter(1)
+        ):
+            dates = {date for (date, _) in date_group}
+            for group in date_groups(dates):
+                min_date = min(group)
+                if len(group) == 1:
+                    exceptions.append(f"{min_date.strftime(date_fmt)} {str(combo)}")
+                else:
+                    max_date = max(group)
+                    exceptions.append(
+                        min_date.strftime(date_fmt)
+                        + " - "
+                        + max_date.strftime(date_fmt)
+                        + " "
+                        + str(combo)
+                    )
 
-        exceptions = "\n".join(
-            f"{date.strftime(date_fmt)} {str(combo)}" for (date, combo) in date_combos
-        )
+        exceptions = "\n".join(exceptions)
 
         return f"""\
 {self.season_name} {self.end_date.year}
@@ -222,6 +240,34 @@ class ExceptionCombination:
             if service.lower()[1] in {"3", "4"}
             or service.lower()[:2] in {"we", "wt", "wn"}
         )
+
+
+def date_groups(dates):
+    """
+    Given an iterable of dates, group them into adjacent sets.
+    """
+    groups = []
+    current_group = None
+    last_date = None
+    for date in sorted(dates):
+        if last_date is None:
+            current_group = {date}
+            last_date = date
+            continue
+
+        if date - last_date == timedelta(days=1):
+            # adjacent to last date
+            last_date = date
+            current_group.add(date)
+            continue
+
+        # not adjacent, start a new group
+        groups.append(current_group)
+        current_group = {date}
+        last_date = date
+
+    groups.append(current_group)
+    return groups
 
 
 def cheat_sheet(rating):

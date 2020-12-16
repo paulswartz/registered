@@ -148,9 +148,7 @@ Sat 1/16 016, l36 (Somvl) *** TAKE THIS OUT
             start_date=date(2020, 12, 20),
             end_date=date(2021, 3, 13),
             weekday_base=ExceptionCombination("011"),
-            saturday_base=ExceptionCombination(
-                "016", garage_exceptions={"sa6": {"BennTT", "Somvl"}}
-            ),
+            saturday_base=ExceptionCombination("016"),
             sunday_base=ExceptionCombination("017"),
             date_combos={
                 date(2020, 12, 21): ExceptionCombination("l31"),
@@ -161,7 +159,7 @@ Sat 1/16 016, l36 (Somvl) *** TAKE THIS OUT
 Sun 12/20/2020 - Sat 3/13/2021
 
 Weekday 011
-Saturday 016, sa6 (BennTT, Somvl)
+Saturday 016
 Sunday 017
 
 Mon 12/21 l31 *** TAKE THIS OUT
@@ -170,3 +168,103 @@ Tue 12/22 011 DR1 ST1 *** TAKE THIS OUT
         actual = str(sheet)
 
         assert actual == expected
+
+    def test_str_exception_date_group(self):
+        sheet = CheatSheet(
+            season_name="Winter",
+            start_date=date(2020, 12, 20),
+            end_date=date(2021, 3, 13),
+            weekday_base=ExceptionCombination("011"),
+            saturday_base=ExceptionCombination("016"),
+            sunday_base=ExceptionCombination("017"),
+            date_combos={
+                date(2020, 12, 28): ExceptionCombination("ns1"),
+                date(2020, 12, 29): ExceptionCombination("ns1"),
+                date(2020, 12, 30): ExceptionCombination("ns1"),
+                date(2020, 12, 31): ExceptionCombination("ns1"),
+            },
+        )
+        expected = """Winter 2021
+
+Sun 12/20/2020 - Sat 3/13/2021
+
+Weekday 011
+Saturday 016
+Sunday 017
+
+Mon 12/21 011 DR1 ST1 *** TAKE THIS OUT
+Mon 12/28 - Thu 12/31 ns1
+"""
+        actual = str(sheet)
+
+        assert actual == expected
+
+    def test_str_exception_date_group_with_gap(self):
+        sheet = CheatSheet(
+            season_name="Winter",
+            start_date=date(2020, 12, 20),
+            end_date=date(2021, 3, 13),
+            weekday_base=ExceptionCombination("011"),
+            saturday_base=ExceptionCombination("016"),
+            sunday_base=ExceptionCombination("017"),
+            date_combos={
+                date(2020, 12, 28): ExceptionCombination("ns1"),
+                date(2020, 12, 29): ExceptionCombination("ns1"),
+                date(2020, 12, 30): ExceptionCombination("ns1"),
+                date(2020, 12, 31): ExceptionCombination("ns1"),
+                date(2021, 1, 18): ExceptionCombination("ns1"),
+                date(2021, 1, 19): ExceptionCombination("ns1"),
+            },
+        )
+        expected = """Winter 2021
+
+Sun 12/20/2020 - Sat 3/13/2021
+
+Weekday 011
+Saturday 016
+Sunday 017
+
+Mon 12/21 011 DR1 ST1 *** TAKE THIS OUT
+Mon 12/28 - Thu 12/31 ns1
+Mon 1/18 - Tue 1/19 ns1
+"""
+
+        assert str(sheet) == expected
+
+
+def test_date_groups():
+    dates = {
+        date(2020, 12, 28),
+        date(2020, 12, 29),
+        date(2020, 12, 30),
+        date(2020, 12, 31),
+        date(2021, 1, 18),
+        date(2021, 1, 19),
+        date(2021, 1, 30),
+    }
+    expected = [
+        {
+            date(2020, 12, 28),
+            date(2020, 12, 29),
+            date(2020, 12, 30),
+            date(2020, 12, 31),
+        },
+        {date(2021, 1, 18), date(2021, 1, 19)},
+        {date(2021, 1, 30)},
+    ]
+    actual = date_groups(dates)
+    assert actual == expected
+
+
+def test_date_groups_single():
+    dates = {date(2021, 1, 18), date(2021, 2, 15)}
+    expected = [
+        {
+            date(2021, 1, 18),
+        },
+        {
+            date(2021, 2, 15),
+        },
+    ]
+    actual = date_groups(dates)
+    assert actual == expected
