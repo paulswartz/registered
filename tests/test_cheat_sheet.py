@@ -104,3 +104,33 @@ class TestCheatSheet:
         assert actual.saturday_base == ExceptionCombination("016")
         assert actual.sunday_base == ExceptionCombination("017")
         assert actual.date_combos == {date(2020, 12, 23): ExceptionCombination("l31")}
+
+    def test_str(self):
+        sheet = CheatSheet(
+            season_name="Winter",
+            start_date=date(2020, 12, 20),
+            end_date=date(2021, 3, 13),
+            weekday_base=ExceptionCombination("011"),
+            saturday_base=ExceptionCombination("016", garage_exceptions={"sa6": {"BennTT", "Somvl"}}),
+            sunday_base=ExceptionCombination("017"),
+            date_combos={
+                date(2020, 12, 24): ExceptionCombination("ns1"),
+                date(2021, 1, 15): ExceptionCombination("l31"),
+                date(2021, 1, 16): ExceptionCombination("016", garage_exceptions={"l36": {"Somvl"}})
+            })
+        expected = """Winter 2021
+
+Sun 12/20/2020 - Sat 3/13/2021
+
+Weekday 011
+Saturday 016, sa6 (BennTT, Somvl)
+Sunday 017
+
+Mon 12/21 011 DR1 ST1 *** TAKE THIS OUT
+Thu 12/24 ns1
+Fri 1/15 l31 *** TAKE THIS OUT
+Sat 1/16 016, l36 (Somvl) *** TAKE THIS OUT
+"""
+        actual = str(sheet)
+
+        assert actual == expected

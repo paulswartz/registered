@@ -37,6 +37,7 @@ Mon 2/15 hl6
 import sys
 import argparse
 from collections import defaultdict
+from datetime import timedelta
 import attr
 from registered.rating import Rating
 from registered.parser import CalendarDate
@@ -56,6 +57,33 @@ class CheatSheet:
     saturday_base = attr.ib()
     sunday_base = attr.ib()
     date_combos = attr.ib(converter=dict)
+
+    def __str__(self):
+        date_range_fmt = "%a %-m/%-d/%Y"
+        date_fmt = "%a %-m/%-d"
+        exceptions = "\n".join(
+            f"{date.strftime(date_fmt)} {str(combo)}"
+            for (date, combo) in self.date_combos.items()
+        )
+        # get the first weekday to apply the DR1/ST1 combos
+        first_weekday = self.start_date
+        while first_weekday < self.end_date:
+            if first_weekday.weekday() < 5:  # weekday
+                break
+            first_weekday += timedelta(days=1)
+
+        return f"""\
+{self.season_name} {self.end_date.year}
+
+{self.start_date.strftime(date_range_fmt)} - {self.end_date.strftime(date_range_fmt)}
+
+Weekday {str(self.weekday_base)}
+Saturday {str(self.saturday_base)}
+Sunday {str(self.sunday_base)}
+
+{first_weekday.strftime(date_fmt)} {str(self.weekday_base)} DR1 ST1 *** TAKE THIS OUT
+{exceptions}
+"""
 
     @classmethod
     def from_records(cls, records):
@@ -109,7 +137,9 @@ class CheatSheet:
             key=lambda combo: sum(
                 1
                 for date in date_to_combos
-                if date in dates and date_to_combos[date] == combo and not combo.should_take_out()
+                if date in dates
+                and date_to_combos[date] == combo
+                and not combo.should_take_out()
             ),
         )
         return base
@@ -180,8 +210,12 @@ class ExceptionCombination:
         - Level 3 or 4 service
         - Weather-related services
         """
-        return any(True for service in self.service_keys()
-                   if service.lower()[1] in {"3", "4"} or service.lower()[:2] in {"we", "wt", "wn"})
+        return any(
+            True
+            for service in self.service_keys()
+            if service.lower()[1] in {"3", "4"}
+            or service.lower()[:2] in {"we", "wt", "wn"}
+        )
 
 
 def cheat_sheet(rating):
