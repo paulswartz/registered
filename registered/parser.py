@@ -238,7 +238,7 @@ class CalendarDate:  # pylint: disable=too-few-public-methods
 
     date = attr.ib(converter=iso_date)
     garage = attr.ib(converter=strip_whitespace)
-    service_key = attr.ib(converter=lambda x: strip_whitespace(x)[-3:])
+    service_key = attr.ib(converter=lambda x: strip_whitespace(x)[-3:].lower())
     day_type = attr.ib(converter=strip_whitespace)
 
     @classmethod
@@ -316,7 +316,7 @@ class Version:  # pylint: disable=too-few-public-methods
     Version of the block file.
     """
 
-    service_key = attr.ib(converter=lambda x: strip_whitespace(x)[-3:])
+    service_key = attr.ib(converter=lambda x: strip_whitespace(x)[-3:].lower())
     day_type = attr.ib(converter=strip_whitespace)
     garage = attr.ib(converter=strip_whitespace)
     description = attr.ib(converter=strip_whitespace)
