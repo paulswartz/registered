@@ -124,7 +124,7 @@ def pull_hastus_directory(args, tempdir):
         print(f"Pulling {hastus_file}...")
         smbclient.shutil.copy(
             smb_path(HASTUS, "KKO", args.hastus_export, hastus_file),
-            tempdir / "Combine" / "HASTUS_export",
+            tempdir / "Combine" / "HASTUS_export" / hastus_file,
         )
         changed = True
 
