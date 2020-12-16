@@ -141,3 +141,32 @@ Sat 1/16 016, l36 (Somvl) *** TAKE THIS OUT
         actual = str(sheet)
 
         assert actual == expected
+
+    def test_str_exception_first_weekday(self):
+        sheet = CheatSheet(
+            season_name="Winter",
+            start_date=date(2020, 12, 20),
+            end_date=date(2021, 3, 13),
+            weekday_base=ExceptionCombination("011"),
+            saturday_base=ExceptionCombination(
+                "016", garage_exceptions={"sa6": {"BennTT", "Somvl"}}
+            ),
+            sunday_base=ExceptionCombination("017"),
+            date_combos={
+                date(2020, 12, 21): ExceptionCombination("l31"),
+            },
+        )
+        expected = """Winter 2021
+
+Sun 12/20/2020 - Sat 3/13/2021
+
+Weekday 011
+Saturday 016, sa6 (BennTT, Somvl)
+Sunday 017
+
+Mon 12/21 l31 *** TAKE THIS OUT
+Tue 12/22 011 DR1 ST1 *** TAKE THIS OUT
+"""
+        actual = str(sheet)
+
+        assert actual == expected

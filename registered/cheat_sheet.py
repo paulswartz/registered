@@ -61,16 +61,23 @@ class CheatSheet:
     def __str__(self):
         date_range_fmt = "%a %-m/%-d/%Y"
         date_fmt = "%a %-m/%-d"
-        exceptions = "\n".join(
-            f"{date.strftime(date_fmt)} {str(combo)}"
-            for (date, combo) in self.date_combos.items()
-        )
         # get the first weekday to apply the DR1/ST1 combos
         first_weekday = self.start_date
         while first_weekday < self.end_date:
             if first_weekday.weekday() < 5:  # weekday
-                break
+                if first_weekday not in self.date_combos:  # not already overridden
+                    break
             first_weekday += timedelta(days=1)
+
+        date_combos = list(self.date_combos.items())
+        date_combos.append(
+            (first_weekday, f"{str(self.weekday_base)} DR1 ST1 *** TAKE THIS OUT")
+        )
+        date_combos.sort()
+
+        exceptions = "\n".join(
+            f"{date.strftime(date_fmt)} {str(combo)}" for (date, combo) in date_combos
+        )
 
         return f"""\
 {self.season_name} {self.end_date.year}
@@ -81,7 +88,6 @@ Weekday {str(self.weekday_base)}
 Saturday {str(self.saturday_base)}
 Sunday {str(self.sunday_base)}
 
-{first_weekday.strftime(date_fmt)} {str(self.weekday_base)} DR1 ST1 *** TAKE THIS OUT
 {exceptions}
 """
 
