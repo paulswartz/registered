@@ -59,7 +59,9 @@ class TestExceptionCombination:
         assert ExceptionCombination("a31").should_take_out()
         assert ExceptionCombination("b41").should_take_out()
         assert ExceptionCombination("we1").should_take_out()
-        assert ExceptionCombination("016", garage_exceptions={"l36": {"Somvl"}}).should_take_out()
+        assert ExceptionCombination(
+            "016", garage_exceptions={"l36": {"Somvl"}}
+        ).should_take_out()
 
 
 class TestCheatSheet:
@@ -111,13 +113,18 @@ class TestCheatSheet:
             start_date=date(2020, 12, 20),
             end_date=date(2021, 3, 13),
             weekday_base=ExceptionCombination("011"),
-            saturday_base=ExceptionCombination("016", garage_exceptions={"sa6": {"BennTT", "Somvl"}}),
+            saturday_base=ExceptionCombination(
+                "016", garage_exceptions={"sa6": {"BennTT", "Somvl"}}
+            ),
             sunday_base=ExceptionCombination("017"),
             date_combos={
                 date(2020, 12, 24): ExceptionCombination("ns1"),
                 date(2021, 1, 15): ExceptionCombination("l31"),
-                date(2021, 1, 16): ExceptionCombination("016", garage_exceptions={"l36": {"Somvl"}})
-            })
+                date(2021, 1, 16): ExceptionCombination(
+                    "016", garage_exceptions={"l36": {"Somvl"}}
+                ),
+            },
+        )
         expected = """Winter 2021
 
 Sun 12/20/2020 - Sat 3/13/2021
