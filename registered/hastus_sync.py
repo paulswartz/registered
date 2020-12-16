@@ -14,7 +14,7 @@ import sys
 import smbclient
 import smbclient.shutil
 from PyInquirer import prompt
-from registered import calendar, merge, parser, seasons, validate
+from registered import calendar, cheat_sheet, merge, parser, seasons, validate
 
 HASTUS = "hshastf1"
 TRANSITMASTER = "hstmtest01"
@@ -186,6 +186,14 @@ def schedules_per_garage(tempdir):
         calendar.main_combine(tempdir / "Combine" / "HASTUS_export", file=file)
 
 
+def write_cheat_sheet(tempdir):
+    """
+    Calculate and write the cheat sheet in Supporting.
+    """
+    with open(tempdir / "Supporting" / "cheat_sheet.txt", "w") as file:
+        cheat_sheet.main_combine(tempdir / "Combine" / "HASTUS_export", file=file)
+
+
 def push_directory(args, tempdir):
     """
     Push the local merged rating to the TransitMaster server.
@@ -239,6 +247,7 @@ def sync_hastus(args):
             return return_code
     pull_prior_versions(tempdir)
     schedules_per_garage(tempdir)
+    write_cheat_sheet(tempdir)
     if args.push:
         push_directory(args, tempdir)
     return 0
