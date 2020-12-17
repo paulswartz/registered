@@ -1,15 +1,15 @@
 # Registered
 
-A set of scripts for working with TransitMaster. Reference the rating process documentation [here](https://github.com/mbta/wiki/blob/master/transit_tech/Procedures/TransitMaster/TM-03_Make_Updates.md). 
+A set of scripts for working with TransitMaster. Reference the rating process documentation [here](https://github.com/mbta/wiki/blob/master/transit_tech/Procedures/TransitMaster/TM-03_Make_Updates.md).
 
 **Effect:**	Different steps throughout the rating process. Allows data validation before importing into TransitMaster.
-**Circumstances:**	As needed. Generally once per quarterly rating.  
-**Required Skills:**	None  
-**Required Tools:**	VPN access, a text editor, access to TM databases 
+**Circumstances:**	As needed. Generally once per quarterly rating.
+**Required Skills:**	None
+**Required Tools:**	VPN access, a text editor, access to TM databases
 
 ## Setup
 
-Reminder: Before the set-up process, clone the registered repository and make sure you're working within it. 
+Reminder: Before the set-up process, clone the registered repository and make sure you're working within it.
 
 ### Linux/MacOS
 ```
@@ -35,27 +35,27 @@ Sync a HASTUS export to the TransitMaster server, validating the data in the pro
 
 - Writes the data to `support/ratings/*` for later processing if needed.
 - Will prompt for your AD password, or you can put it in the `AD_PASSWORD` environment
-  variable.
+  variable. If you have trouble logging in, set `USERNAME` to your AD account.
 
 ```
-$ pipenv run hastus_sync (if testing, use "—no-push" to avoid actually updating the rating data on the TM server)
+$ pipenv run hastus_sync # (if testing, use "—no-push" to avoid actually updating the rating data on the TM server)
 ```
 
-## Scripts 
+## Scripts
 
-For the scripts below, you will have to access the rating folder on hstmtest01 on your local machine to direct it to the right path. If you're working from a PC computer, you are all set. If you're working from a MAC, follow the instructions below. 
+For the scripts below, you will have to access the rating folder on <TRANSITMASTER_FILE_SERVER> on your local machine to direct it to the right path. If you're working from a PC computer, you are all set. If you're working from a MAC, follow the instructions below.
 
 ### Linux/MacOS
 - From your MAC, open finder
-- Click 'Go' 
-- Click 'Connect to Server' 
-- Type 'smb://HSTMTEST01/c$/Ratings' 
-- Access the files at '/Volumes/Ratings/[Rating]' (i.e. /Volumes/Ratings/Winter12202020) 
+- Click 'Go'
+- Click 'Connect to Server'
+- Type 'smb://<TRANSITMASTER_FILE_SERVER>/c$/Ratings'
+- Access the files at '/Volumes/Ratings/[Rating]' (i.e. /Volumes/Ratings/Winter12202020)
 
 
 ## Merge
 
-Merge a set of rating files together in the Combine directory. This step is found under TM-03.05, step 2 in [TransitMaster New Rating Procedure] 
+Merge a set of rating files together in the Combine directory. This step is found under TM-03.05, step 2 in [TransitMaster New Rating Procedure]
 
 Writes the merged files to `<rating>.pat`, `<rating>.nde`, &c.
 
@@ -93,7 +93,11 @@ $ pipenv run calendar <path to Rating/Combine/HASTUS_export>
 
 Print a CSV which shows new/changed stops between two ratings. This step is found under TM-03.06, step 1 in [TransitMaster New Rating Procedure]
 
-- Copy .env.template to .env and fill out at least the first three variables with the TransitMaster DB server information from 1Password.
+1. Copy .env.template to .env and fill out at least the following variables with the TransitMaster DB server information from 1Password.
+    - `TRANSITMASTER_DATA_MART_SERVER`
+    - `TRANSITMASTER_UID`
+    - `TRANSITMASTER_PWD`
+
 ```
 $ pipenv run stop_comparison <path to current Rating/Combine> <path to next Rating/Combine>
 ```

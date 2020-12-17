@@ -1,8 +1,8 @@
 """
 Sync the HASTUS rating export to the TransitMaster server.
 
-The HASTUS data is exported to \\\\HSHASTF1\\KKO. We want those files to live on
-\\\\HSTMTEST01\\C$\\Ratings, along with some other directories. The basic template
+The HASTUS data is exported \\\\<HASTUS_FILE_SERVER>\\KKO. We want those files to live on
+\\\\<TRANSITMASTER_FILE_SERVER>\\C$\\Ratings, along with some other directories. The basic template
 is in support\\rating_template.
 """
 import itertools
@@ -16,8 +16,9 @@ import smbclient.shutil
 from PyInquirer import prompt
 from registered import calendar, cheat_sheet, merge, parser, seasons, validate
 
-HASTUS = "hshastf1"
-TRANSITMASTER = "hstmtest01"
+HASTUS = os.environ["HASTUS_FILE_SERVER"]
+TRANSITMASTER = os.environ["TRANSITMASTER_FILE_SERVER"]
+TRANSITMASTER_DB = os.environ["TRANSITMASTER_DATABASE_SERVER"]
 SLASH = "\\"
 
 
@@ -140,7 +141,7 @@ def pull_prior_versions(tempdir):
     """
     smbclient.shutil.copyfile(
         smb_path(
-            "hstmcldb",
+            TRANSITMASTER_DB,
             "e$",
             "FTP_ROOT",
             "Operational Data",
@@ -153,7 +154,7 @@ def pull_prior_versions(tempdir):
     )
     annun_dirs = smbclient.listdir(
         smb_path(
-            "hstmcldb",
+            TRANSITMASTER_DB,
             "e$",
             "FTP_ROOT",
             "Operational Data",
@@ -164,7 +165,7 @@ def pull_prior_versions(tempdir):
     universal_dir = sorted(dir for dir in annun_dirs if "Universal" in dir)[0]
     smbclient.shutil.copyfile(
         smb_path(
-            "hstmcldb",
+            TRANSITMASTER_DB,
             "e$",
             "FTP_ROOT",
             "Operational Data",
