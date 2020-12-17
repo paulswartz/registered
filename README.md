@@ -81,6 +81,14 @@ Print a CSV which has the service information for each garage, by date. This ste
 $ pipenv run calendar <path to Rating/Combine or Rating/Combine/HASTUS_export>
 ```
 
+## Cheat Sheet
+
+Print a summary of the relevant dates/services for the rating.
+
+```
+$ pipenv run calendar <path to Rating/Combine/HASTUS_export>
+```
+
 ## Stop Comparison
 
 Print a CSV which shows new/changed stops between two ratings. This step is found under TM-03.06, step 1 in [TransitMaster New Rating Procedure]

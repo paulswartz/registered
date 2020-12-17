@@ -296,9 +296,9 @@ def main(args):
 
 
 parser = argparse.ArgumentParser(
-    description="Generate the rating cheat sheet from the HASTUS export files (post-merge)"
+    description="Generate the rating cheat sheet from the HASTUS export files"
 )
-parser.add_argument("DIR", help="The Combine directory where all the files live")
+parser.add_argument("DIR", help="The HASTUS_export directory where all the files live")
 
 if __name__ == "__main__":
     main(parser.parse_args())
