@@ -45,6 +45,12 @@ from registered.rating import Rating
 from registered.parser import CalendarDate
 from registered import seasons
 
+(DATE_RANGE_FORMAT, DATE_FORMAT) = {
+    "darwin": ("%a %-m/%-d/%Y", "%a %-m/%-d"),
+    "linux": ("%a %-m/%-d/%Y", "%a %-m/%-d"),
+    "win32": ("%a %#m/%#d/%Y", "%a %#m/%#d"),
+}[sys.platform]
+
 
 @attr.s
 class CheatSheet:
@@ -61,8 +67,6 @@ class CheatSheet:
     date_combos = attr.ib(converter=dict)
 
     def __str__(self):
-        date_range_fmt = "%a %-m/%-d/%Y"
-        date_fmt = "%a %-m/%-d"
         # get the first weekday to apply the DR1/ST1 combos
         first_weekday = self.start_date
         while first_weekday < self.end_date:
@@ -84,13 +88,13 @@ class CheatSheet:
             for group in date_groups(dates):
                 min_date = min(group)
                 if len(group) == 1:
-                    exceptions.append(f"{min_date.strftime(date_fmt)} {str(combo)}")
+                    exceptions.append(f"{min_date.strftime(DATE_FORMAT)} {str(combo)}")
                 else:
                     max_date = max(group)
                     exceptions.append(
-                        min_date.strftime(date_fmt)
+                        min_date.strftime(DATE_FORMAT)
                         + " - "
-                        + max_date.strftime(date_fmt)
+                        + max_date.strftime(DATE_FORMAT)
                         + " "
                         + str(combo)
                     )
@@ -100,7 +104,7 @@ class CheatSheet:
         return f"""\
 {self.season_name} {self.end_date.year}
 
-{self.start_date.strftime(date_range_fmt)} - {self.end_date.strftime(date_range_fmt)}
+{self.start_date.strftime(DATE_RANGE_FORMAT)} - {self.end_date.strftime(DATE_RANGE_FORMAT)}
 
 Weekday {str(self.weekday_base)}
 Saturday {str(self.saturday_base)}
