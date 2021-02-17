@@ -29,11 +29,11 @@ def conn():
     if CONN is None:
         # use the fallback envvar if needed
         server = os.environ.get(
-            "TRANSITMASTER_DATA_MART_SERVER", os.environ.get("TRANSITMASTER_SERVER")
+            "TRANSITMASTER_DATABASE_SERVER", os.environ.get("TRANSITMASTER_SERVER")
         )
         if server is None:
             # raise a KeyError for the normal envvar
-            raise KeyError("TRANSITMASTER_DATA_MART_SERVER")
+            raise KeyError("TRANSITMASTER_DATABASE_SERVER")
         CONN = pyodbc.connect(
             driver=sql_driver(),
             server=server,

@@ -18,6 +18,8 @@ $ asdf install
 $ asdf reshim
 $ pip install pipenv
 $ pipenv install  # --dev if you want to do development on the scripts
+$ cp .env.template .env
+$ vi .env  # configure environment variable
 ```
 
 ### Windows
@@ -27,6 +29,8 @@ $ pyenv install
 $ pyenv rehash
 $ pip install pipenv
 $ pipenv install  # --dev if you want to do development on the scripts
+$ copy .env.template .env
+$ wordpad .env  # configure environment variable
 ```
 
 ## HASTUS sync
@@ -94,7 +98,7 @@ $ pipenv run calendar <path to Rating/Combine/HASTUS_export>
 Print a CSV which shows new/changed stops between two ratings. This step is found under TM-03.06, step 1 in [TransitMaster New Rating Procedure]
 
 1. Copy .env.template to .env and fill out at least the following variables with the TransitMaster DB server information from 1Password.
-    - `TRANSITMASTER_DATA_MART_SERVER`
+    - `TRANSITMASTER_DATABASE_SERVER`
     - `TRANSITMASTER_UID`
     - `TRANSITMASTER_PWD`
 
