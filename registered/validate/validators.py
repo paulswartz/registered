@@ -171,6 +171,7 @@ VALID_GARAGES = {
     "albny",
     "arbor",
     "cabot",
+    "censq",
     "charl",
     "fell",
     "lynn",
@@ -188,6 +189,8 @@ def validate_block_garages(rating):
     Validate that each block leaves/arrives from the same, valid, garage.
 
     Exceptions:
+    - Central Square -> Lynn
+    - Lynn -> Central Square
     - Lynn -> Wonderland
     - Wonderland -> Lynn
     - dead reckoning schedules (ST1, DR1)
@@ -212,6 +215,8 @@ def validate_block_garages(rating):
                 )
 
         if first_garage != last_garage and (first_garage, last_garage) not in {
+            ("censq", "lynn"),
+            ("lynn", "censq"),
             ("lynn", "wondw"),
             ("wondw", "lynn"),
         }:
