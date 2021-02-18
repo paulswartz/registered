@@ -16,7 +16,9 @@ def output(stops, stop_ids, by_stop, change_type):
     Output given stops in the appropriate TSV format.
     """
     tm_stop_locations = {
-        stop_id: (lat, lon) for (stop_id, _, lat, lon) in geo_node(stop_ids)
+        stop_id: (lat, lon)
+        for (stop_id, _, lat, lon) in geo_node(stop_ids)
+        if lat is not None and lon is not None
     }
     for stop_id in sorted(stop_ids, key=int):
         stop = stops[stop_id]
