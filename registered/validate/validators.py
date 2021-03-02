@@ -399,23 +399,24 @@ def validate_routes_have_two_directions(rating):
     - rad
     - wad
     """
+    default_expected_count = 2
+    override_counts = {"171": 1, "195": 1, "214": 1, "rad": 1, "wad": 1}
     routes_to_directions = defaultdict(set)
 
     for trip_pattern in rating["ppat"]:
-        if trip_pattern.route_id in {"171", "195", "214", "rad", "wad"}:
-            continue
-
         routes_to_directions[trip_pattern.route_id].add(trip_pattern.direction_name)
 
     for (route_id, direction_names) in routes_to_directions.items():
-        if len(direction_names) == 2:
+        expected_count = override_counts.get(route_id, default_expected_count)
+
+        if len(direction_names) == expected_count:
             continue
 
         yield ValidationError(
             file_type="ppat",
             key=route_id,
-            error="route_with_one_direction",
-            description=f"has direction {repr(direction_names)}",
+            error="route_with_unexpected_direction_count",
+            description=f"has directions {repr(direction_names)}",
         )
 
 
