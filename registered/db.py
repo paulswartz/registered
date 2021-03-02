@@ -4,6 +4,7 @@ Functions for accessing data from the TransitMaster database.
 import itertools
 import os
 import pyodbc
+from registered import environ
 
 CONN = None
 
@@ -28,8 +29,8 @@ def conn():
     global CONN  # pylint: disable=global-statement
     if CONN is None:
         # use the fallback envvar if needed
-        server = os.environ.get(
-            "TRANSITMASTER_DATABASE_SERVER", os.environ.get("TRANSITMASTER_SERVER")
+        server = environ.get(
+            "TRANSITMASTER_DATABASE_SERVER", environ.get("TRANSITMASTER_SERVER")
         )
         if server is None:
             # raise a KeyError for the normal envvar
@@ -38,8 +39,8 @@ def conn():
             driver=sql_driver(),
             server=server,
             database="TMMain",
-            user=os.environ["TRANSITMASTER_UID"],
-            password=os.environ["TRANSITMASTER_PWD"],
+            user=environ["TRANSITMASTER_UID"],
+            password=environ["TRANSITMASTER_PWD"],
         )
     return CONN
 

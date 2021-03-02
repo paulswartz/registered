@@ -14,11 +14,11 @@ import sys
 import smbclient
 import smbclient.shutil
 from PyInquirer import prompt
-from registered import calendar, cheat_sheet, merge, parser, seasons, validate
+from registered import calendar, cheat_sheet, environ, merge, parser, seasons, validate
 
-HASTUS = os.environ["HASTUS_FILE_SERVER"]
-TRANSITMASTER = os.environ["TRANSITMASTER_FILE_SERVER"]
-TRANSITMASTER_DB = os.environ["TRANSITMASTER_DATABASE_SERVER"]
+HASTUS = environ["HASTUS_FILE_SERVER"]
+TRANSITMASTER = environ["TRANSITMASTER_FILE_SERVER"]
+TRANSITMASTER_DB = environ["TRANSITMASTER_DATABASE_SERVER"]
 SLASH = "\\"
 
 
@@ -36,8 +36,8 @@ def configure_smb(args):
     """
     Configure the SMB client, prompting for username/password if needed.
     """
-    username = args.username or os.environ.get("USERNAME") or os.environ.get("USER")
-    password = os.environ.get("AD_PASSWORD")
+    username = args.username or environ.get("USERNAME") or environ.get("USER")
+    password = environ.get("AD_PASSWORD")
     questions = []
     if not username:
         questions.append({"type": "input", "name": "username", "message": "Username:"})
