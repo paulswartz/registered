@@ -2,3 +2,4 @@
 !.env.template
 /support/ratings/*
 !/support/ratings/.gitkeep
+/cache/

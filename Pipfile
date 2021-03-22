@@ -9,6 +9,11 @@ pyproj = "*"
 pyodbc = "*"
 smbprotocol = "*"
 pyinquirer = "*"
+osmnx = "*"
+folium = "*"
+scipy = "*"
+sklearn = "*"
+networkx = {ref = "sp-2.4", git = "https://github.com/paulswartz/networkx.git"}
 
 [dev-packages]
 pytest = "*"
@@ -32,6 +37,7 @@ stop_comparison = "python -m registered.stop_comparison"
 location_comparison = "python -m registered.location_comparison"
 merge = "python -m registered.merge"
 validate = "python -m registered.validate"
+missing_intervals = "python -m registered.missing_intervals"
 
 [pipenv]
 allow_prereleases = true
