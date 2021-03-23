@@ -83,15 +83,15 @@ class EdgesCache:
 
         # otherwise, find which of the multiple edges has the point on the
         # right-hand side.
-        def calc_angle(geometry):
+        def calc_angle(row):
             # might need to be updated if we stare simplifying the graph. in
             # that case, we'd need to find the bearing at the projection of
             # point on the given geometry. -ps
-            (tail_x, tail_y) = geometry.coords[0]
-            return ox.bearing.get_bearing((tail_y, tail_x), (point.y, point.x))
+            (tail_x, tail_y) = row["geometry"].coords[0]
+            angle_bearing = ox.bearing.get_bearing((tail_y, tail_x), (point.y, point.x))
+            return angle_offset(row["bearing"], angle_bearing)
 
-        point_bearing = within_distance["geometry"].map(calc_angle)
-        offset = point_bearing - within_distance["bearing"]
+        offset = within_distance.apply(calc_angle, axis=1)
         # offsets >0 are on the right-hand side
         idx = offset.idxmax()
         return within_distance.loc[idx]
@@ -481,12 +481,41 @@ class RestrictedGraph:
         return (nodes, restrictions)
 
 
+def angle_offset(base, angle):
+    """
+    Given a base bearing and a second bearing, return the offset in degrees.
+
+    Positive offsets are clockwise/to the right, negative offsets are
+    counter-clockwise/to the left.
+    """
+
+    if base > 180:
+        base = base - 360
+    if angle > 180:
+        angle = angle - 360
+
+    # rotate the angle towards 0 by base
+    offset = angle - base
+
+    if offset <= -180:
+        # bring it back into the (-180, 180] range
+        return 360 + offset
+
+    return offset
+
+    # return angle + (360 - base)
+
+
 def cut(line, distance):
     """
     Cuts a line in two at a distance from its starting point.
     """
     # from https://shapely.readthedocs.io/en/stable/manual.html
     coords = list(line.coords)
+    if distance <= 0:
+        distance = 0.01
+    elif distance >= 1:
+        distance = 0.99
     for i, coord in enumerate(coords):
         point_distance = line.project(Point(coord), normalized=True)
         if point_distance == distance:

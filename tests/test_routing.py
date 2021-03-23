@@ -26,6 +26,27 @@ def assert_has_path(origin, dest, graph=None, weight="travel_time"):
     return (graph, path)
 
 
+@pytest.mark.parametrize(
+    "base,angle,expected",
+    [
+        (0, 90, 90),
+        (0, 180, 180),
+        (0, 270, -90),
+        (180, 0, 180),
+        (180, 90, -90),
+        (180, 180, 0),
+        (180, 270, 90),
+        (270, 0, 90),
+        (270, 315, 45),
+        (270, 225, -45),
+        (359, 0, 1),
+        (359, 358, -1),
+    ],
+)
+def test_angle_offset(base, angle, expected):
+    assert routing.angle_offset(base, angle) == approx(expected)
+
+
 def test_osm_relations_to_restrictions():
     response = {
         "elements": [
