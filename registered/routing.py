@@ -374,8 +374,8 @@ class RestrictedGraph:
                 "primary": 60,
                 "secondary": 50,
                 "tertiary": 30,
-                "private": 8,
-                "service": 8,
+                "private": 16,
+                "service": 16,
                 "residential": 0.001,
             },
         )
