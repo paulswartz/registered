@@ -53,13 +53,23 @@ class Stop:  # pylint: disable=too-few-public-methods
     description = attr.ib()
     point = attr.ib(repr=lambda point: point.wkt)
 
-    _template = Template("{{ this.description }} ({{ this.id }})")
+    _template = Template(
+        """
+    {{ this.description }} ({{ this.id }})<br>
+    <a href="{{osm_url}}">OpenStreetMap</a>
+    """
+    )
 
     def render(self):
         """
         Render to HTML.
         """
-        return self._template.render(this=self)
+        osm_url = (
+            f"https://www.openstreetmap.org/query?"
+            f"lat={self.point.y}&lon={self.point.x}"
+            f"#map=18/{self.point.y}/{self.point.x}"
+        )
+        return self._template.render(this=self, osm_url=osm_url)
 
 
 @attr.s
