@@ -72,9 +72,9 @@ class EdgesCache:
         If more than one edge is closest, returns the one where the point is
         on the right (not left) side.
         """
-        nearest = self.gdf.loc[self.index.nearest(point.bounds, objects="raw")]
+        # get a few nearest edges to test, then get the actual closest one
+        nearest = self.gdf.loc[self.index.nearest(point.bounds, 4, objects="raw")]
         distances = nearest["geometry"].map(point.distance)
-        nearest["distances"] = distances
         min_distance = distances.min() + 1e-6
         within_distance = nearest.loc[distances <= min_distance]
         if len(within_distance) < 2:

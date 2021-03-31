@@ -136,6 +136,16 @@ def test_compass_direction():
     assert graph.compass_direction(path) == approx(88.7, abs=0.2)
 
 
+def test_nearest_street_church_st():
+    origin = Point(-71.040217, 42.317071)
+    dest = Point(-71.064371, 42.308101)
+
+    (graph, path) = assert_has_path(origin, dest)
+    # if the compass direction is closer to 340, then the path has made the
+    # turn onto Percival.
+    assert graph.compass_direction(path) == approx(250, abs=1)
+
+
 def test_folium_map():
     origin = Point(-71.03991910663855, 42.33306759993236)
     dest = Point(-71.03599235273778, 42.335613467448354)
