@@ -1,6 +1,7 @@
 """
 Calculate shortest/fastest paths for missing intervals.
 """
+from difflib import SequenceMatcher
 from itertools import count
 import attr
 import folium
@@ -75,6 +76,18 @@ class EdgesCache:
         # get a few nearest edges to test, then get the actual closest one
         nearest = self.gdf.loc[self.index.nearest(point.bounds, 4, objects="raw")]
         distances = nearest["geometry"].map(point.distance)
+        nearest["distances"] = distances
+        if hasattr(point, "description"):
+            # bias the distance towards more similar names. this helps put
+            # the point on the right edge, given a description like
+            # "Washington St @ Blah St".
+            name_ratio = (
+                nearest["name"]
+                .astype(str)
+                .map(lambda x: SequenceMatcher(None, point.description, x).ratio())
+            )
+            distances = distances / name_ratio
+
         min_distance = distances.min() + 1e-6
         within_distance = nearest.loc[distances <= min_distance]
         if len(within_distance) < 2:

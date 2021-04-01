@@ -147,6 +147,17 @@ def test_nearest_street_church_st():
     assert graph.compass_direction(path) == approx(250, abs=1)
 
 
+def test_nearest_street_washington():
+    origin = Point(-70.943385, 42.465441)
+    dest = Point(-70.94593, 42.463623)
+    setattr(dest, "description", "Washington St @ Munroe St")
+
+    (graph, path) = assert_has_path(origin, dest)
+    # if the compass direction is closer to 45, then the path went around to
+    # Munroe St
+    assert graph.compass_direction(path) == approx(125, abs=1)
+
+
 def test_folium_map():
     origin = Point(-71.03991910663855, 42.33306759993236)
     dest = Point(-71.03599235273778, 42.335613467448354)

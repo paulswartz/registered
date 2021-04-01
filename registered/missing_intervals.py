@@ -43,22 +43,28 @@ def points_from_stop_ids(stop_ids):
     } | garages
 
 
-@attr.s
-class Stop:  # pylint: disable=too-few-public-methods
+class Stop(Point):  # pylint: disable=too-few-public-methods
     """
     A location to calculate an interval (either from or to).
     """
 
-    id = attr.ib()  # pylint: disable=invalid-name
-    description = attr.ib()
-    point = attr.ib(repr=lambda point: point.wkt)
+    def __init__(self, id, description, point):  # pylint: disable=redefined-builtin
+        """
+        Initialize our Stop with the extra parameters.
+        """
+        Point.__init__(self, point)
+        self.id = id  # pylint: disable=invalid-name
+        self.description = description
 
     _template = Template(
         """
     {{ this.description }} ({{ this.id }})<br>
-    <a href="{{osm_url}}">OpenStreetMap</a>
+    <a href="{{osm_url | e}}">OpenStreetMap</a>
     """
     )
+
+    def __repr__(self):
+        return f"Stop(id={repr(self.id)}, description={repr(self.description)}, point={self.wkt})"
 
     def render(self):
         """
@@ -66,8 +72,8 @@ class Stop:  # pylint: disable=too-few-public-methods
         """
         osm_url = (
             f"https://www.openstreetmap.org/query?"
-            f"lat={self.point.y}&lon={self.point.x}"
-            f"#map=18/{self.point.y}/{self.point.x}"
+            f"lat={self.y}&lon={self.x}"
+            f"#map=18/{self.y}/{self.x}"
         )
         return self._template.render(this=self, osm_url=osm_url)
 
@@ -94,10 +100,8 @@ class Interval:
             return cls(from_stop, to_stop, interval_type)
         ox.utils.log(f"calculating interval from {from_stop} to {to_stop}")
         try:
-            fastest_path = graph.shortest_path(from_stop.point, to_stop.point)
-            shortest_path = graph.shortest_path(
-                from_stop.point, to_stop.point, weight="length"
-            )
+            fastest_path = graph.shortest_path(from_stop, to_stop)
+            shortest_path = graph.shortest_path(from_stop, to_stop, weight="length")
         except nx.NetworkXNoPath:
             return cls(from_stop, to_stop, graph, None, None)
 
@@ -172,16 +176,16 @@ class Interval:
         google_maps_url = (
             f"https://www.google.com/maps/dir/?api=1&"
             f"travelmode=driving&"
-            f"origin={ self.from_stop.point.y },{ self.from_stop.point.x }&"
-            f"destination={ self.to_stop.point.y },{ self.to_stop.point.x }"
+            f"origin={ self.from_stop.y },{ self.from_stop.x }&"
+            f"destination={ self.to_stop.y },{ self.to_stop.x }"
         )
         results = self._calculate_results()
         if results == []:
             folium_map = ""
         else:
             folium_map = self.graph.folium_map(
-                self.from_stop.point,
-                self.to_stop.point,
+                self.from_stop,
+                self.to_stop,
                 [
                     path
                     for path in [self.fastest_path, self.shortest_path]
