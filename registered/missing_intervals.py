@@ -87,17 +87,19 @@ class Interval:
     from_stop = attr.ib()
     to_stop = attr.ib()
     interval_type = attr.ib()
+    description = attr.ib()
     graph = attr.ib(default=None)
     fastest_path = attr.ib(default=None)
     shortest_path = attr.ib(default=None)
 
+    # pylint: disable=too-many-arguments
     @classmethod
-    def from_stops(cls, from_stop, to_stop, graph, interval_type):
+    def from_stops(cls, from_stop, to_stop, graph, interval_type, interval_description):
         """
         Create an interval given the from/to stops.
         """
         if cls.should_ignore(from_stop, to_stop):
-            return cls(from_stop, to_stop, interval_type)
+            return cls(from_stop, to_stop, interval_type, interval_description)
         ox.utils.log(f"calculating interval from {from_stop} to {to_stop}")
         try:
             fastest_path = graph.shortest_path(from_stop, to_stop)
@@ -109,7 +111,13 @@ class Interval:
             shortest_path = None
 
         return cls(
-            from_stop, to_stop, interval_type, graph, fastest_path, shortest_path
+            from_stop,
+            to_stop,
+            interval_type,
+            interval_description,
+            graph,
+            fastest_path,
+            shortest_path,
         )
 
     IGNORE_RE = re.compile(r"\d|Inbound|Outbound")
@@ -134,6 +142,7 @@ class Interval:
             <th>From</th>
             <th>To</th>
             <th>Interval Type</th>
+            <th>Description</th>
             <th>Google Maps Directions</th>
           </tr>
         </thead>
@@ -142,6 +151,7 @@ class Interval:
             <td>{{ this.from_stop.render() }}</td>
             <td>{{ this.to_stop.render() }}</td>
             <td>{{ this.interval_type }}</td>
+            <td>{{ this.description }}</td>
             <td>
               <a target="_blank"
                  href="{{ google_maps_url | e}}">Directions</a></td>
@@ -303,7 +313,9 @@ def parse_rows(rows):
             row["ToStopDescription"],
             stop_locations[row["ToStopNumber"]],
         )
-        interval = Interval.from_stops(from_stop, to_stop, graph, row["IntervalType"])
+        interval = Interval.from_stops(
+            from_stop, to_stop, graph, row["IntervalType"], row["IntervalDescription"]
+        )
         page.add(interval)
 
     return page
