@@ -196,7 +196,10 @@ class RestrictedGraph:
         (nearest_id, nearest_point) = self._nodes_cache.nearest_point(point)
 
         same_point_tolerance = 0.0001
-        if nearest_point.distance(point) < same_point_tolerance:
+        if (
+            nearest_point.distance(point) < same_point_tolerance
+            and self.graph.degree(nearest_id) == 2
+        ):
             existing = nearest_id
             ox.utils.log(f"node already existed {existing}")
             self._created_nodes[point.wkb] = existing
@@ -208,7 +211,10 @@ class RestrictedGraph:
 
         ox.utils.log(f"snapping {point.wkt} to {snapped_point.wkt}")
         (nearest_id, nearest_point) = self._nodes_cache.nearest_point(snapped_point)
-        if snapped_point.distance(nearest_point) < same_point_tolerance:
+        if (
+            snapped_point.distance(nearest_point) < same_point_tolerance
+            and self.graph.degree(nearest_id) == 2
+        ):
             ox.utils.log(f"snapped point already existed {nearest_id}")
             name = nearest_id
         else:

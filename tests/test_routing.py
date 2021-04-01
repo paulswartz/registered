@@ -158,11 +158,12 @@ def test_compass_direction():
 def test_nearest_street_church_st():
     origin = Point(-71.040217, 42.317071)
     dest = Point(-71.064371, 42.308101)
+    setattr(dest, "description", "St Peters Sq @ Church")
 
     (graph, path) = assert_has_path(origin, dest)
     # if the compass direction is closer to 340, then the path has made the
     # turn onto Percival.
-    assert graph.compass_direction(path) == approx(250, abs=1)
+    assert graph.compass_direction(path) == approx(75, abs=1)
 
 
 def test_nearest_street_washington():
