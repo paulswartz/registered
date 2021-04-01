@@ -507,6 +507,9 @@ def angle_offset(base, angle):
         # bring it back into the (-180, 180] range
         return 360 + offset
 
+    if offset > 180:
+        return offset - 360
+
     return offset
 
     # return angle + (360 - base)

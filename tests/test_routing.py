@@ -41,6 +41,7 @@ def assert_has_path(origin, dest, graph=None, weight="travel_time"):
         (270, 225, -45),
         (359, 0, 1),
         (359, 358, -1),
+        (190, 179, -11),
     ],
 )
 def test_angle_offset(base, angle, expected):
