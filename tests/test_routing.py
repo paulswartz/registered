@@ -101,6 +101,24 @@ def test_osm_relations_to_restrictions_same_way_uturn():
     assert restrictions == [(3, {4}, {4})]
 
 
+@pytest.mark.parametrize(
+    "width,actual",
+    [
+        ("1", 1.0),
+        ("2.0 m", 2.0),
+        ("3;4", 7.0),
+        ("5.2 ft", 1.58496),
+        ("4'6\"", 1.3716),
+        ("14'", 4.2672),
+        ("t", None),
+    ],
+)
+def test_clean_width(width, actual):
+    if actual is not None:
+        actual = approx(actual)
+    assert routing.RestrictedGraph.clean_width(width) == actual
+
+
 def test_no_left_turn():
     bc_high_school = Point(-71.04149, 42.31760)
     federal_st = Point(-71.056411, 42.355286)

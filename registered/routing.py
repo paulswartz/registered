@@ -368,15 +368,18 @@ class RestrictedGraph:
             graph=graph, restricted_nodes=restricted_nodes, restrictions=restrictions
         )
 
-    @staticmethod
-    def add_graph_features(graph):
+    @classmethod
+    def add_graph_features(cls, graph):
         """
         Update the given graph with important features.
 
-        - speeds
+        - width in meters
+        - speeds in km/h
         - travel times
-        - bearings
+        - bearings in degrees
         """
+        graph = cls.add_widths(graph)
+
         # impute speed on all edges missing data
         graph = ox.add_edge_speeds(
             graph,
@@ -389,16 +392,106 @@ class RestrictedGraph:
                 "tertiary": 30,
                 "private": 16,
                 "service": 16,
-                "residential": 0.001,
+                "residential": 16,
             },
         )
         # calculate travel time (seconds) for all edges
         graph = ox.add_edge_travel_times(graph)
 
+        # penalize some types of edges
+        graph = cls.add_edge_penalties(graph)
+
         # add edge bearings
         graph = ox.add_edge_bearings(graph)
 
         return graph
+
+    @classmethod
+    def add_widths(cls, graph):
+        """
+        Add "width_m" to each edge with a width value, normalizing it to meters.
+        """
+        edges = ox.utils_graph.graph_to_gdfs(
+            graph, nodes=False, fill_edge_geometry=False
+        )
+        if "width_m" in edges.columns:
+            return graph
+        if "width" not in edges.columns:
+            return graph
+        width_m = edges["width"].astype(str).map(cls.clean_width).astype(float)
+        nx.set_edge_attributes(graph, values=width_m, name="width_m")
+        return graph
+
+    @classmethod
+    def add_edge_penalties(cls, graph):
+        """
+        Penalize some edges to reduce their use in routing.
+        """
+        edges = ox.utils_graph.graph_to_gdfs(
+            graph, nodes=False, fill_edge_geometry=False
+        )
+
+        # penalize residential streets
+        residential = edges["highway"].eq("residential")
+        # penalize narrow streets
+        narrow = edges["width_m"] < 5
+
+        edges.loc[residential | narrow, "travel_time"] *= 1.5
+
+        nx.set_edge_attributes(graph, values=edges["travel_time"], name="travel_time")
+        return graph
+
+    @classmethod
+    def clean_width(cls, width_str):
+        """
+        Clean width specifiers to a consistent number of meters.
+
+        - "1" -> 1.0
+        - "2.0 m" -> 2.0
+        - "3;4" -> 7.0
+        - "5.2 ft" -> 1.58496 (convert feet to meters)
+        """
+        FEET_TO_METERS = 0.3048  # pylint: disable=invalid-name
+
+        if width_str == "t":
+            return None
+
+        try:
+            return float(width_str)
+        except ValueError:
+            pass
+
+        if ";" in width_str:
+            return sum(cls.clean_width(part) for part in width_str.split(";"))
+
+        if width_str.endswith(" m"):
+            return float(width_str[:-2])
+
+        feet = None
+        inches = None
+
+        if width_str.endswith(" ft"):
+            feet = width_str[:-3]
+
+        elif width_str.endswith(" feet"):
+            feet = width_str[:-5]
+
+        elif width_str.endswith('"'):
+            # feet and inches
+            [feet, inches] = width_str[:-1].split("'")
+
+        elif width_str.endswith("'"):
+            feet = width_str[:-1]
+
+        else:
+            ox.utils.log(f"unknown width specification: {repr(width_str)}")
+            return None
+
+        feet = float(feet)
+        if inches is not None:
+            feet += float(inches) / 12
+
+        return feet * FEET_TO_METERS
 
     # pylint: disable=too-many-arguments
     def restricted(self, origin, turn, dest, from_attrs, to_attrs):
@@ -415,6 +508,13 @@ class RestrictedGraph:
         if origin == dest:
             # avoid u-turns
             return True
+        from_bearing = from_attrs.get("bearing")
+        to_bearing = to_attrs.get("bearing")
+        offset = angle_offset(from_bearing, to_bearing)
+        if abs(offset) > 135:
+            # avoid making U-ish turns
+            return True
+
         if turn not in self.restricted_nodes:
             return False
         from_ways = self.ensure_set(from_attrs["osmid"])
