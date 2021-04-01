@@ -259,6 +259,16 @@ class Page:
         """
     <!DOCTYPE html>
     <html>
+    <head>
+        <style type="text/css">
+        td {
+          padding: 0 3em 1em;
+        }
+        td:first-child {
+          padding-left: 0;
+        }
+        </style>
+    </head>
     <body>
       {% for interval in this.intervals %}
       {% if loop.index > 1 %}<hr>{% endif %}
