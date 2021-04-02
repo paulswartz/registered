@@ -99,7 +99,7 @@ class Interval:
         Create an interval given the from/to stops.
         """
         if cls.should_ignore(from_stop, to_stop):
-            return cls(from_stop, to_stop, interval_type, interval_description)
+            return cls(from_stop, to_stop, interval_type, interval_description, graph)
         ox.utils.log(f"calculating interval from {from_stop} to {to_stop}")
         try:
             fastest_path = graph.shortest_path(from_stop, to_stop)
@@ -143,7 +143,7 @@ class Interval:
             <th>To</th>
             <th>Interval Type</th>
             <th>Description</th>
-            <th>Google Maps Directions</th>
+            <th>Directions</th>
           </tr>
         </thead>
         <tbody>
@@ -154,7 +154,10 @@ class Interval:
             <td>{{ this.description }}</td>
             <td>
               <a target="_blank"
-                 href="{{ google_maps_url | e}}">Directions</a></td>
+                 href="{{ google_maps_url | e}}">Google Maps</a><br>
+              <a target="_blank"
+                 href="{{ osm_url | e}}">OpenStreetMap</a><br>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -189,26 +192,33 @@ class Interval:
             f"origin={ self.from_stop.y },{ self.from_stop.x }&"
             f"destination={ self.to_stop.y },{ self.to_stop.x }"
         )
+        osm_url = (
+            f"https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&"
+            f"route={self.from_stop.y},{self.from_stop.x};{self.to_stop.y},{self.to_stop.x}"
+        )
         results = self._calculate_results()
         if results == []:
-            folium_map = ""
+            paths = []
         else:
-            folium_map = self.graph.folium_map(
-                self.from_stop,
-                self.to_stop,
-                [
-                    path
-                    for path in [self.fastest_path, self.shortest_path]
-                    if path is not None
-                ],
-                height=600,
-                width=600,
-            )
-            folium_map = folium_map._repr_html_()  # pylint: disable=protected-access
+            paths = [
+                path
+                for path in [self.fastest_path, self.shortest_path]
+                if path is not None
+            ]
+
+        folium_map = self.graph.folium_map(
+            self.from_stop,
+            self.to_stop,
+            paths,
+            height=600,
+            width=600,
+        )
+        folium_map = folium_map._repr_html_()  # pylint: disable=protected-access
 
         return self._template.render(
             this=self,
             google_maps_url=google_maps_url,
+            osm_url=osm_url,
             results=results,
             folium_map=folium_map,
         )

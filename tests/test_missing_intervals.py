@@ -41,3 +41,20 @@ def test_basic_workflow():
     ]
     page = parse_rows(rows)
     page.render()
+
+
+def test_ignored_row():
+    rows = [
+        {
+            "issueid": "1",
+            "routeversionid": "138.2",
+            "IntervalType": "DH",
+            "FromStopNumber": "32001",
+            "FromStopDescription": "Quincy Center Busway",
+            "ToStopNumber": "32004",
+            "ToStopDescription": "Quincy Center Busway",
+            "IntervalDescription": "220-Outbound-220-3",
+        }
+    ]
+    page = parse_rows(rows)
+    page.render()
