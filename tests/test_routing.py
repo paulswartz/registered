@@ -111,6 +111,9 @@ class TestRouting:
         ((-71.084983, 42.39193), (-71.078666, 42.386049)),
         ((-70.99272, 42.418574), (-70.99205, 42.413385)),
         ((-71.101815, 42.436141), (-71.076315, 42.384167)),
+        ((-71.1292, 42.39702), (-71.129116, 42.396704)),
+        ((-71.129116, 42.396704), (-71.1292, 42.39702)),
+        ((-70.94560, 42.46236), (-70.94726, 42.46206)),
     ]
 
     def setup_class(self):
@@ -118,11 +121,11 @@ class TestRouting:
         self.graph = routing.RestrictedGraph.from_points(points)
 
     @pytest.mark.parametrize("weight", ["length", "travel_time"])
-    @pytest.mark.parametrize("origin,dest", OD_PAIRS)
-    def test_has_path(self, weight, origin, dest):
+    @pytest.mark.parametrize("pair", OD_PAIRS)
+    def test_has_path(self, weight, pair):
+        (origin, dest) = pair
         origin_pt = Point(origin)
         dest_pt = Point(dest)
         (_graph, path) = assert_has_path(
             origin_pt, dest_pt, graph=self.graph, weight=weight
         )
-        print(path)

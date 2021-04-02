@@ -73,17 +73,16 @@ class EdgesCache:
             (next(self.counter), t.geometry.bounds, t.Index) for t in gdf.itertuples()
         )
 
-    def nearest_edge(self, point):
+    def nearest_edges(self, point):
         """
-        Return the nearest edge to the given point.
+        Return the nearest edges to the given point.
 
-        If more than one edge is closest, returns the one where the point is
-        on the right (not left) side.
+        If more than one edge is closest (and they aren't service roads),
+        returns the one where the point is on the right (not left) side.
         """
         # get a few nearest edges to test, then get the actual closest one
         nearest = self.gdf.loc[self.index.nearest(point.bounds, 4, objects="raw")]
         distances = nearest["geometry"].map(point.distance)
-        nearest["distances"] = distances
         if hasattr(point, "description"):
             # bias the distance towards more similar names. this helps put
             # the point on the right edge, given a description like
@@ -97,9 +96,14 @@ class EdgesCache:
 
         min_distance = distances.min() + 1e-6
         within_distance = nearest.loc[distances <= min_distance]
+
         if len(within_distance) < 2:
             # only one closest edge, return it
-            return within_distance.iloc[0]
+            return within_distance
+
+        if within_distance["highway"].eq("service").all():
+            # all edges are service roads, so allow going either direction
+            return within_distance
 
         # otherwise, find which of the multiple edges has the point on the
         # right-hand side.
@@ -114,7 +118,7 @@ class EdgesCache:
         offset = within_distance.apply(calc_angle, axis=1)
         # offsets >0 are on the right-hand side
         idx = offset.idxmax()
-        return within_distance.loc[idx]
+        return within_distance.loc[[idx]]
 
     def geometry(self, from_node, to_node=None):
         """
@@ -205,7 +209,7 @@ class RestrictedGraph:
         same_point_tolerance = 0.0001
         if (
             nearest_point.distance(point) < same_point_tolerance
-            and self.graph.degree(nearest_id) == 2
+            and self.graph.degree(nearest_id) <= 2
         ):
             existing = nearest_id
             ox.utils.log(f"node already existed {existing}")
@@ -213,21 +217,24 @@ class RestrictedGraph:
             return existing
 
         ox.utils.log(f"finding closest edge to {point.wkt}")
-        nearest_edge = self._edges_cache.nearest_edge(point)
-        snapped_point = shapely.ops.nearest_points(nearest_edge.geometry, point)[0]
+        nearest_edges = self._edges_cache.nearest_edges(point)
+        snapped_point = shapely.ops.nearest_points(
+            nearest_edges.iloc[0].geometry, point
+        )[0]
 
         ox.utils.log(f"snapping {point.wkt} to {snapped_point.wkt}")
         (nearest_id, nearest_point) = self._nodes_cache.nearest_point(snapped_point)
         if (
             snapped_point.distance(nearest_point) < same_point_tolerance
-            and self.graph.degree(nearest_id) == 2
+            and self.graph.degree(nearest_id) <= 2
         ):
             ox.utils.log(f"snapped point already existed {nearest_id}")
             name = nearest_id
         else:
             name = self._nodes_cache.new_id()
             ox.utils.log(f"creating new node {name}")
-            self.split_edge_at_point(nearest_edge.name, name, snapped_point)
+            for nearest_edge in nearest_edges.index:
+                self.split_edge_at_point(nearest_edge, name, snapped_point)
 
         self._created_nodes[point.wkb] = name
         return name

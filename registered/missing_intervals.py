@@ -15,7 +15,7 @@ from registered import routing
 GARAGE_LOCATIONS = {
     "fell": Point(-71.08891, 42.42174),
     "censq": Point(-70.945598, 42.46236),
-    "ncamb": Point(-71.1296316, 42.3973418),
+    "ncamb": Point(-71.12895, 42.3971),
 }
 
 
