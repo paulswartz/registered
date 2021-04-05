@@ -57,7 +57,10 @@ class NodesCache:
         """
         Updates the cache with the new node.
         """
+        if node.name in self.gdf.index:
+            return
         self.gdf = self.gdf.append(node)
+        self.gdf.sort_index(inplace=True)
         self.index.add(node.name, node.geometry.bounds)
 
 
@@ -134,7 +137,9 @@ class EdgesCache:
         """
         Update the cache with the new edges (as a GeoDataFrame).
         """
+        gdf = gdf.loc[~gdf.index.isin(self.gdf.index)]
         self.gdf = self.gdf.append(gdf)
+        self.gdf.sort_index(inplace=True)
         for edge in gdf.itertuples():
             self.index.insert(next(self.counter), edge.geometry.bounds, edge.Index)
 
