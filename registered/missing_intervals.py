@@ -79,7 +79,7 @@ class Stop(Point):  # pylint: disable=too-few-public-methods
 
 
 @attr.s
-class Interval:
+class Interval:  # pylint: disable=too-many-instance-attributes
     """
     One interval calculation.
     """
@@ -91,6 +91,7 @@ class Interval:
     graph = attr.ib(default=None)
     fastest_path = attr.ib(default=None)
     shortest_path = attr.ib(default=None)
+    folium_map = attr.ib(default=None)
 
     # pylint: disable=too-many-arguments
     @classmethod
@@ -98,17 +99,28 @@ class Interval:
         """
         Create an interval given the from/to stops.
         """
-        if cls.should_ignore(from_stop, to_stop):
-            return cls(from_stop, to_stop, interval_type, interval_description, graph)
-        ox.utils.log(f"calculating interval from {from_stop} to {to_stop}")
-        try:
-            fastest_path = graph.shortest_path(from_stop, to_stop)
-            shortest_path = graph.shortest_path(from_stop, to_stop, weight="length")
-        except nx.NetworkXNoPath:
-            return cls(from_stop, to_stop, graph, None, None)
+        fastest_path = shortest_path = None
+        if not cls.should_ignore(from_stop, to_stop):
+            ox.utils.log(f"calculating interval from {from_stop} to {to_stop}")
+            try:
+                fastest_path = graph.shortest_path(from_stop, to_stop)
+                shortest_path = graph.shortest_path(from_stop, to_stop, weight="length")
+            except nx.NetworkXNoPath:
+                pass
 
         if fastest_path == shortest_path:
             shortest_path = None
+
+        paths = [path for path in [fastest_path, shortest_path] if path is not None]
+
+        folium_map = graph.folium_map(
+            from_stop,
+            to_stop,
+            paths,
+            height=600,
+            width=600,
+        )
+        folium_map.render()
 
         return cls(
             from_stop,
@@ -118,6 +130,7 @@ class Interval:
             graph,
             fastest_path,
             shortest_path,
+            folium_map,
         )
 
     IGNORE_RE = re.compile(r"\d|Inbound|Outbound")
@@ -177,7 +190,12 @@ class Interval:
         {% endfor %}
         </tbody>
       </table>
-      {{ folium_map }}
+      {{ folium_map_html }}
+      <script type="text/javascript">
+        window.addEventListener('DOMContentLoaded', function() {
+          {{ folium_map_script }}
+        });
+      </script>
     </div>
     """
     )
@@ -197,30 +215,17 @@ class Interval:
             f"route={self.from_stop.y},{self.from_stop.x};{self.to_stop.y},{self.to_stop.x}"
         )
         results = self._calculate_results()
-        if results == []:
-            paths = []
-        else:
-            paths = [
-                path
-                for path in [self.fastest_path, self.shortest_path]
-                if path is not None
-            ]
-
-        folium_map = self.graph.folium_map(
-            self.from_stop,
-            self.to_stop,
-            paths,
-            height=600,
-            width=600,
-        )
-        folium_map = folium_map._repr_html_()  # pylint: disable=protected-access
+        map_root = self.folium_map.get_root()
+        folium_map_html = map_root.html.render()
+        folium_map_script = map_root.script.render()
 
         return self._template.render(
             this=self,
             google_maps_url=google_maps_url,
             osm_url=osm_url,
             results=results,
-            folium_map=folium_map,
+            folium_map_html=folium_map_html,
+            folium_map_script=folium_map_script,
         )
 
     def _calculate_results(self):
@@ -270,14 +275,33 @@ class Page:
     <!DOCTYPE html>
     <html>
     <head>
-        <style type="text/css">
+      <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+      <meta name="viewport" content="width=device-width,
+            initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      <style type="text/css">
+        html {
+          padding: 2em;
+        }
         td {
           padding: 0 3em 1em;
         }
         td:first-child {
           padding-left: 0;
         }
-        </style>
+        .folium-map {
+          display: block;
+          height: 50em;
+          width: 50em;
+        }
+      </style>
+
+      <script>
+        L_NO_TOUCH = false;
+        L_DISABLE_3D = false;
+      </script>
+
+      {% for script in scripts %}<script defer src="{{script}}"></script>{% endfor %}
+      {% for sheet in stylesheets %}<link rel="stylesheet" href="{{sheet}}"/>{% endfor %}
     </head>
     <body>
       {% for interval in this.intervals %}
@@ -293,8 +317,21 @@ class Page:
         """
         Render to HTML.
         """
+        # pylint: disable=line-too-long
         ox.utils.log("rendering page...")
-        return self._template.render(this=self)
+        scripts = [
+            "https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.js",
+            "https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js",
+        ]
+        stylesheets = [
+            "https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css",
+            "https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css",
+            "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css",
+            "https://maxcdn.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css",
+        ]
+        return self._template.render(
+            this=self, scripts=scripts, stylesheets=stylesheets
+        )
 
 
 def parse_csv(input_io):
