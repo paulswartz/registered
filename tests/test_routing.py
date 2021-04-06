@@ -93,6 +93,10 @@ class TestRouting:
         ((-71.129116, 42.396704), (-71.1292, 42.39702)),
         ((-70.94560, 42.46236), (-70.94726, 42.46206)),
     ]
+    MAP_PAIRS = [
+        ((-71.084983, 42.39193), (-71.078666, 42.386049)),
+        ((-70.894718, 42.254173), (-70.892174, 42.251347)),
+    ]
     ORIGINS = [(-71.03991910663855, 42.33306759993236), (-71.04149, 42.31760)]
     DESTS = [
         (-71.056411, 42.355286),
@@ -101,7 +105,7 @@ class TestRouting:
 
     @classmethod
     def setup_class(cls):
-        points = [Point(p) for points in cls.OD_PAIRS for p in points]
+        points = [Point(p) for points in (cls.OD_PAIRS + cls.MAP_PAIRS) for p in points]
         points += [Point(p) for p in cls.ORIGINS]
         points += [Point(p) for p in cls.DESTS]
         cls.graph = routing.RestrictedGraph.from_points(points)
@@ -123,11 +127,13 @@ class TestRouting:
         dest_pt = Point(dest)
         (_graph, _path) = assert_has_path(origin_pt, dest_pt, graph=self.graph)
 
-    def test_folium_map(self):
-        (origin, dest) = self.OD_PAIRS[0]
+    @pytest.mark.parametrize("pair", MAP_PAIRS)
+    def test_folium_map(self, pair):
+        (origin, dest) = pair
         origin_pt = Point(origin)
         dest_pt = Point(dest)
-        (_graph, path) = assert_has_path(origin_pt, dest_pt, graph=self.graph)
-        folium_map = self.graph.folium_map(origin_pt, dest_pt, [path])
+        (_graph, fast_path) = assert_has_path(origin_pt, dest_pt, graph=self.graph)
+        (_graph, short_path) = assert_has_path(origin_pt, dest_pt, graph=self.graph)
+        folium_map = self.graph.folium_map(origin_pt, dest_pt, [fast_path, short_path])
         assert folium_map is not None
         assert folium_map._repr_html_()

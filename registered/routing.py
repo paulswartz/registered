@@ -29,8 +29,16 @@ class NodesCache:
     def __init__(self, gdf):
         self.gdf = gdf
         self.counter = count(gdf.index.max() + 1)
+        capacity = int(len(gdf) * 1.1)
+        props = rtree.index.Property(
+            index_capacity=capacity,
+            dimension=2,
+            variant=rtree.index.RT_Star,
+            fill_factor=0.9,
+        )
         self.index = rtree.index.Index(
-            (t.Index, t.geometry.bounds, None) for t in gdf.itertuples()
+            ((t.Index, t.geometry.bounds, None) for t in gdf.itertuples()),
+            properties=props,
         )
 
     def new_id(self):
@@ -72,8 +80,19 @@ class EdgesCache:
     def __init__(self, gdf):
         self.gdf = gdf
         self.counter = count()
+        capacity = int(len(gdf) * 1.1)
+        props = rtree.index.Property(
+            index_capacity=capacity,
+            dimension=2,
+            variant=rtree.index.RT_Star,
+            fill_factor=0.9,
+        )
         self.index = rtree.index.Index(
-            (next(self.counter), t.geometry.bounds, t.Index) for t in gdf.itertuples()
+            (
+                (next(self.counter), t.geometry.bounds, t.Index)
+                for t in gdf.itertuples()
+            ),
+            properties=props,
         )
 
     def nearest_edges(self, point):
@@ -85,18 +104,18 @@ class EdgesCache:
         """
         # get a few nearest edges to test, then get the actual closest one
         nearest = self.gdf.loc[self.index.nearest(point.bounds, 4, objects="raw")]
-        distances = nearest["geometry"].map(point.distance)
+        distances = nearest["geometry"].map(point.distance, na_action="ignore")
         if hasattr(point, "description"):
             # bias the distance towards more similar names. this helps put
             # the point on the right edge, given a description like
             # "Washington St @ Blah St".
             name_ratio = (
-                nearest["name"]
-                .astype(str)
-                .map(lambda x: SequenceMatcher(None, point.description, x).ratio())
-            )
+                nearest["name"].map(
+                    lambda x: SequenceMatcher(None, point.description, x).ratio(),
+                    na_action="ignore",
+                )
+            ).fillna(0.01)
             distances = distances / name_ratio
-
         min_distance = distances.min() + 1e-6
         within_distance = nearest.loc[distances <= min_distance]
 
@@ -321,12 +340,12 @@ class RestrictedGraph:
         )
 
         for (path, color) in zip(paths, DEFAULT_COLORS):
-            for (from_node, to_node) in zip(path, path[1:]):
-                locations = [
-                    (row[1], row[0])
-                    for row in self._edges_cache.geometry(from_node, to_node).coords
-                ]
-                folium.PolyLine(locations, weight=2, color=color).add_to(route_map)
+            locations = [
+                (row[1], row[0])
+                for (from_node, to_node) in zip(path, path[1:])
+                for row in self._edges_cache.geometry(from_node, to_node).coords
+            ]
+            folium.PolyLine(locations, weight=2, color=color).add_to(route_map)
 
         folium.Marker(
             (from_point.y, from_point.x), icon=folium.Icon(icon="play", color="green")
@@ -443,7 +462,7 @@ class RestrictedGraph:
             return graph
         if "width" not in edges.columns:
             return graph
-        width_m = edges["width"].astype(str).map(clean_width).astype(float)
+        width_m = edges["width"].map(clean_width, na_action="ignore").astype(float)
         nx.set_edge_attributes(graph, values=width_m, name="width_m")
         return graph
 
