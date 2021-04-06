@@ -116,9 +116,10 @@ class TestRouting:
         ((-70.94560, 42.46236), (-70.94726, 42.46206)),
     ]
 
-    def setup_class(self):
-        points = [Point(p) for points in self.OD_PAIRS for p in points]
-        self.graph = routing.RestrictedGraph.from_points(points)
+    @classmethod
+    def setup_class(cls):
+        points = [Point(p) for points in cls.OD_PAIRS for p in points]
+        cls.graph = routing.RestrictedGraph.from_points(points)
 
     @pytest.mark.parametrize("weight", ["length", "travel_time"])
     @pytest.mark.parametrize("pair", OD_PAIRS)
