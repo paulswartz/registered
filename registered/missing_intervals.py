@@ -354,6 +354,9 @@ def parse_rows(rows):
         for stop_id in [row["FromStopNumber"], row["ToStopNumber"]]
     }
     stop_locations = points_from_stop_ids(stop_ids)
+    missing_stops = {stop_id for stop_id in stop_ids if stop_id not in stop_locations}
+    if missing_stops:
+        raise KeyError(f"unable to find locations for {missing_stops}")
     graph = routing.RestrictedGraph.from_points(stop_locations.values())
 
     page = Page()
