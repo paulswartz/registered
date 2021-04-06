@@ -84,28 +84,6 @@ def test_nearest_street_washington():
     assert graph.compass_direction(path) == approx(125, abs=1)
 
 
-def test_folium_map():
-    origin = Point(-71.03991910663855, 42.33306759993236)
-    dest = Point(-71.03599235273778, 42.335613467448354)
-
-    (graph, path) = assert_has_path(origin, dest)
-    folium_map = graph.folium_map(origin, dest, [path])
-    assert folium_map is not None
-    assert folium_map._repr_html_()
-
-
-def test_multiple_points():
-    origins = [Point(-71.03991910663855, 42.33306759993236), Point(-71.04149, 42.31760)]
-    dests = [
-        Point(-71.056411, 42.355286),
-        Point(-71.03599235273778, 42.335613467448354),
-    ]
-    graph = None
-
-    for (origin, dest) in product(origins, dests):
-        (graph, _path) = assert_has_path(origin, dest, graph=graph)
-
-
 class TestRouting:
     OD_PAIRS = [
         ((-71.084983, 42.39193), (-71.078666, 42.386049)),
@@ -115,10 +93,17 @@ class TestRouting:
         ((-71.129116, 42.396704), (-71.1292, 42.39702)),
         ((-70.94560, 42.46236), (-70.94726, 42.46206)),
     ]
+    ORIGINS = [(-71.03991910663855, 42.33306759993236), (-71.04149, 42.31760)]
+    DESTS = [
+        (-71.056411, 42.355286),
+        (-71.03599235273778, 42.335613467448354),
+    ]
 
     @classmethod
     def setup_class(cls):
         points = [Point(p) for points in cls.OD_PAIRS for p in points]
+        points += [Point(p) for p in cls.ORIGINS]
+        points += [Point(p) for p in cls.DESTS]
         cls.graph = routing.RestrictedGraph.from_points(points)
 
     @pytest.mark.parametrize("weight", ["length", "travel_time"])
@@ -127,6 +112,22 @@ class TestRouting:
         (origin, dest) = pair
         origin_pt = Point(origin)
         dest_pt = Point(dest)
-        (_graph, path) = assert_has_path(
+        (_graph, _path) = assert_has_path(
             origin_pt, dest_pt, graph=self.graph, weight=weight
         )
+
+    @pytest.mark.parametrize("pair", list(product(ORIGINS, DESTS)))
+    def test_multiple_points(self, pair):
+        (origin, dest) = pair
+        origin_pt = Point(origin)
+        dest_pt = Point(dest)
+        (_graph, _path) = assert_has_path(origin_pt, dest_pt, graph=self.graph)
+
+    def test_folium_map(self):
+        (origin, dest) = self.OD_PAIRS[0]
+        origin_pt = Point(origin)
+        dest_pt = Point(dest)
+        (_graph, path) = assert_has_path(origin_pt, dest_pt, graph=self.graph)
+        folium_map = self.graph.folium_map(origin_pt, dest_pt, [path])
+        assert folium_map is not None
+        assert folium_map._repr_html_()
