@@ -109,13 +109,13 @@ class EdgesCache:
             # bias the distance towards more similar names. this helps put
             # the point on the right edge, given a description like
             # "Washington St @ Blah St".
-            name_ratio = (
-                nearest["name"].map(
-                    lambda x: SequenceMatcher(None, point.description, x).ratio(),
-                    na_action="ignore",
-                )
-            ).fillna(0.01)
-            distances = distances / name_ratio
+            name_ratio = nearest["name"].map(
+                lambda x: SequenceMatcher(None, point.description, x).ratio(),
+                na_action="ignore",
+            )
+            if name_ratio.notna().any():
+                name_ratio = name_ratio.fillna(name_ratio.mean())
+                distances = distances / name_ratio
         min_distance = distances.min() + 1e-6
         within_distance = nearest.loc[distances <= min_distance]
 

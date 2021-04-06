@@ -53,35 +53,33 @@ def test_no_left_turn():
         ), f"bad turn, coming from {previous_node} going to {next_node}"
 
 
-def test_compass_direction():
-    origin = Point(-71.03991910663855, 42.33306759993236)
-    dest = Point(-71.03599235273778, 42.335613467448354)
+class TestCompassDirection:
+    ORIGINS = [
+        (Point(-71.03991910663855, 42.33306759993236), None),
+        (Point(-71.040217, 42.317071), None),
+        (Point(-70.943385, 42.465441), None),
+        (Point(-71.170956, 42.272991), None),
+    ]
+    DESTS = [
+        (Point(-71.03599235273778, 42.335613467448354), None),
+        (Point(-71.064371, 42.308101), "St Peters Sq @ Church"),
+        (Point(-70.94593, 42.463623), "Washington St @ Munroe St"),
+        (Point(-71.171963, 42.271777), "Charles River Loop"),
+    ]
+    DIRECTIONS = [88.7, 75.1, 125.4, 153.9]
 
-    (graph, path) = assert_has_path(origin, dest)
+    @pytest.mark.parametrize("origin,dest,compass", zip(ORIGINS, DESTS, DIRECTIONS))
+    def test_compass_direction(self, origin, dest, compass):
+        (origin, description) = origin
+        if description is not None:
+            setattr(origin, "description", description)
 
-    assert graph.compass_direction(path) == approx(88.7, abs=0.2)
+        (dest, description) = dest
+        if description is not None:
+            setattr(dest, "description", description)
 
-
-def test_nearest_street_church_st():
-    origin = Point(-71.040217, 42.317071)
-    dest = Point(-71.064371, 42.308101)
-    setattr(dest, "description", "St Peters Sq @ Church")
-
-    (graph, path) = assert_has_path(origin, dest)
-    # if the compass direction is closer to 340, then the path has made the
-    # turn onto Percival.
-    assert graph.compass_direction(path) == approx(75, abs=1)
-
-
-def test_nearest_street_washington():
-    origin = Point(-70.943385, 42.465441)
-    dest = Point(-70.94593, 42.463623)
-    setattr(dest, "description", "Washington St @ Munroe St")
-
-    (graph, path) = assert_has_path(origin, dest)
-    # if the compass direction is closer to 45, then the path went around to
-    # Munroe St
-    assert graph.compass_direction(path) == approx(125, abs=1)
+        (graph, path) = assert_has_path(origin, dest)  # , graph=self.graph
+        assert graph.compass_direction(path) == approx(compass)
 
 
 class TestRouting:
