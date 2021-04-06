@@ -130,12 +130,6 @@ def angle_offset(base, angle):
     Positive offsets are clockwise/to the right, negative offsets are
     counter-clockwise/to the left.
     """
-
-    if base > 180:
-        base = base - 360
-    if angle > 180:
-        angle = angle - 360
-
     # rotate the angle towards 0 by base
     offset = angle - base
 
@@ -147,8 +141,6 @@ def angle_offset(base, angle):
         return offset - 360
 
     return offset
-
-    # return angle + (360 - base)
 
 
 def cut(line, distance):
