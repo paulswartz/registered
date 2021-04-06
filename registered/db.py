@@ -38,6 +38,7 @@ def conn():
         CONN = pyodbc.connect(
             driver=sql_driver(),
             server=server,
+            port=1433,
             database="TMMain",
             user=environ["TRANSITMASTER_UID"],
             password=environ["TRANSITMASTER_PWD"],
