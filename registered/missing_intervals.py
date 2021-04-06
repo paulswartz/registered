@@ -230,7 +230,7 @@ class Interval:  # pylint: disable=too-many-instance-attributes
 
     def _calculate_results(self):
         if not self.fastest_path:
-            return []
+            return [["", 0, "NULL"]]
         results = [
             (
                 "Fastest (red)",
