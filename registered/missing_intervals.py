@@ -1,20 +1,23 @@
 """
 Calculate shortest/fastest paths for missing intervals.
 """
+import argparse
 import csv
+from pathlib import Path
 import re
-import sys
 import attr
 import osmnx as ox
 import requests
 from jinja2 import Template
 from shapely.geometry import Point
 import networkx as nx
-from registered import routing
+from registered import db, routing
 
 GARAGE_LOCATIONS = {
-    "fell": Point(-71.08891, 42.42174),
+    "albny": Point(-71.06499, 42.34067),
+    "cabot": Point(-71.05823, 42.34023),
     "censq": Point(-70.945598, 42.46236),
+    "fell": Point(-71.08891, 42.42174),
     "ncamb": Point(-71.12895, 42.3971),
 }
 
@@ -120,7 +123,6 @@ class Interval:  # pylint: disable=too-many-instance-attributes
             height=600,
             width=600,
         )
-        folium_map.render()
 
         return cls(
             from_stop,
@@ -215,6 +217,7 @@ class Interval:  # pylint: disable=too-many-instance-attributes
             f"route={self.from_stop.y},{self.from_stop.x};{self.to_stop.y},{self.to_stop.x}"
         )
         results = self._calculate_results()
+        self.folium_map.render()
         map_root = self.folium_map.get_root()
         folium_map_html = map_root.html.render()
         folium_map_script = map_root.script.render()
@@ -334,18 +337,82 @@ class Page:
         )
 
 
-def parse_csv(input_io):
+def read_database():
     """
-    Parse the CSV data in into a Page.
+    Read the missing intervals from the TransitMaster DB.
     """
-    rows = list(csv.DictReader(input_io))
+    sql_headers = [
+        "issueid",
+        "routeversionid",
+        "IntervalType",
+        "FromStopNumber",
+        "FromStopDescription",
+        "ToStopNumber",
+        "ToStopDescription",
+        "IntervalDescription",
+    ]
+    # 8/20/18 Updated by Jennette Rodemeyer to exclude "and
+    # (gni.compass_direction is not null)", since TM17 sets new deadhead
+    # intervals to null heading by default. */
+    sql = """
+SET NOCOUNT ON;
+USE TMMAIN;
 
-    return parse_rows(rows)
+declare @ttvid numeric(9);
+select @ttvid = max(time_table_version_id) from time_table_version;
+
+declare @distval numeric(6);
+SELECT @distval = 0;  -- Distance in feet to look for.
+
+select 1 as issueid, @ttvid+0.2 as routeversionid,
+  '--' AS IntervalType,
+       gn1.geo_node_abbr AS FromStopNumber, gn1.geo_node_name AS FromStopDescription,
+       gn2.geo_node_abbr AS ToStopNumber, gn2.geo_node_name AS ToStopDescription,
+	min(RTRIM(r.route_abbr) +'-'+ RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
+  from pattern_geo_interval_xref pgix
+    inner join pattern p on pgix.pattern_id = p.pattern_id
+    inner join route r on p.route_id = r.route_id
+    inner join route_direction rd on p.route_direction_id = rd.route_direction_id
+    inner join geo_node_interval gni on pgix.geo_node_interval_id = gni.interval_id
+    inner join geo_node gn1 on gni.start_point_id = gn1.geo_node_id
+    inner join geo_node gn2 on gni.end_point_id = gn2.geo_node_id
+  where pgix.time_table_version_id = @ttvid
+    AND ( gni.distance_between_measured = @distval OR gni.distance_between_measured IS NULL )
+    AND ( gni.distance_between_map = @distval OR gni.distance_between_map IS NULL )
+ group by gn1.geo_node_abbr, gn1.geo_node_name, gn2.geo_node_abbr, gn2.geo_node_name
+UNION
+select 1 as issueid, @ttvid+0.2 as routeversionid,
+          CASE dh_type
+            WHEN 1 THEN 'DH'
+            WHEN 2 THEN 'PO'
+            ELSE 'PI'
+          END as IntervalType,
+       gn1.geo_node_abbr AS FromStopNumber, gn1.geo_node_name AS FromStopDescription,
+       gn2.geo_node_abbr AS ToStopNumber, gn2.geo_node_name AS ToStopDescription,
+    MIN(RTRIM(r.route_abbr) +'-'+ RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
+  from deadheads dh
+    inner join pattern p on dh.pattern_id = p.pattern_id
+    inner join route r on p.route_id = r.route_id
+    inner join route_direction rd on p.route_direction_id = rd.route_direction_id
+    inner join geo_node_interval gni on dh.geo_node_interval_id = gni.interval_id
+    inner join geo_node gn1 on gni.start_point_id = gn1.geo_node_id
+    inner join geo_node gn2 on gni.end_point_id = gn2.geo_node_id
+  where dh.time_table_version_id = @ttvid
+    AND ( gni.distance_between_measured = @distval OR gni.distance_between_measured IS NULL )
+    AND ( gni.distance_between_map = @distval OR gni.distance_between_map IS NULL )
+ group by dh_type, gn1.geo_node_abbr, gn1.geo_node_name, gn2.geo_node_abbr, gn2.geo_node_name
+ order by IntervalType, IntervalDescription;
+"""
+    conn = db.conn()
+    cursor = conn.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    return [dict(zip(sql_headers, row)) for row in result]
 
 
 def parse_rows(rows):
     """
-    Parse the given iterable of rows into a Page.
+    Parse the given list of rows into a Page.
     """
     row_count = len(rows)
     stop_ids = {
@@ -385,27 +452,41 @@ def main(argv):
     """
     Entrypoint for the Missing Intervals Calculation.
     """
-    if len(argv) == 1:
-        # stdin -> stdout
-        page = parse_csv(sys.stdin)
-        sys.stdout.write(page.render())
-
-    elif len(argv) == 2:
-        # file -> stdout
-        with open(argv[1]) as input_io:
-            page = parse_csv(input_io)
-            sys.stdout.write(page.render())
-
-    elif len(argv) == 3:
-        with open(argv[1]) as input_io:
-            with open(argv[2], "w") as out_io:
-                ox.config(log_console=True)
-                page = parse_csv(input_io)
-                out_io.write(page.render())
-
+    ox.config(log_console=True)
+    if argv.input_csv:
+        ox.utils.log(f"Reading from {argv.input_csv}...")
+        rows = list(csv.DictReader(argv.input_csv.open()))
     else:
-        raise RuntimeError("expected 0, 1, or 2 command line arguments")
+        ox.utils.log("Reading from TransitMaster database...")
+        rows = read_database()
+        if argv.output_csv:
+            with argv.output_csv.open("w") as out_io:
+                headers = rows[0].keys()
+                ox.utils.log(f"Writing {len(rows)} to {argv.output_csv}...")
+                writer = csv.DictWriter(out_io, headers)
+                writer.writeheader()
+                writer.writerows(rows)
 
+    page = parse_rows(rows)
+    with argv.html.open("w") as out_io:
+        ox.utils.log(f"Writing HTML to {argv.html}...")
+        out_io.write(page.render())
+
+
+parser = argparse.ArgumentParser(
+    description="Calculate missing interval distances and angles."
+)
+parser.add_argument(
+    "html", metavar="HTML", help="path to HTML file to output", type=Path
+)
+parser.add_argument(
+    "--input-csv", type=Path, help="CSV file to use as an input instead of the database"
+)
+parser.add_argument(
+    "--output-csv",
+    type=Path,
+    help="CSV file to write the database results to (only if reading from the database)",
+)
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main(parser.parse_args())
