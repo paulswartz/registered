@@ -3,6 +3,7 @@ Calculate shortest/fastest paths for missing intervals.
 """
 from difflib import SequenceMatcher
 from itertools import count
+import os
 import attr
 import folium
 import osmnx as ox
@@ -19,6 +20,8 @@ from registered.routing_helpers import (
 )
 
 DEFAULT_COLORS = ["red", "yellow", "blue", "green"]
+
+ox.utils.config(cache_folder=os.environ.get("OSMNX_CACHE_DIR", "./cache"))
 
 
 class NodesCache:
@@ -114,7 +117,7 @@ class EdgesCache:
                 na_action="ignore",
             )
             if name_ratio.notna().any():
-                name_ratio = name_ratio.fillna(name_ratio.mean())
+                niame_ratio = name_ratio.fillna(name_ratio.mean())
                 distances = distances / name_ratio
         min_distance = distances.min() + 1e-6
         within_distance = nearest.loc[distances <= min_distance]
