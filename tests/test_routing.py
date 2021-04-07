@@ -91,47 +91,52 @@ class TestRouting:
         ((-71.129116, 42.396704), (-71.1292, 42.39702)),
         ((-70.94560, 42.46236), (-70.94726, 42.46206)),
     ]
-    MAP_PAIRS = [
-        ((-71.084983, 42.39193), (-71.078666, 42.386049)),
-        ((-70.894718, 42.254173), (-70.892174, 42.251347)),
-    ]
+
+    @pytest.mark.parametrize("pair", OD_PAIRS)
+    def test_has_path(self, pair):
+        (origin, dest) = pair
+        origin_pt = Point(origin)
+        dest_pt = Point(dest)
+        (graph, _path) = assert_has_path(origin_pt, dest_pt, weight="travel_time")
+        (_graph, path) = assert_has_path(
+            origin_pt, dest_pt, graph=graph, weight="length"
+        )
+
+
+class TestMultiplePoints:
     ORIGINS = [(-71.03991910663855, 42.33306759993236), (-71.04149, 42.31760)]
     DESTS = [
         (-71.056411, 42.355286),
         (-71.03599235273778, 42.335613467448354),
     ]
+    OD_PAIRS = list(product(ORIGINS, DESTS))
 
     @classmethod
     def setup_class(cls):
-        points = [Point(p) for points in (cls.OD_PAIRS + cls.MAP_PAIRS) for p in points]
-        points += [Point(p) for p in cls.ORIGINS]
-        points += [Point(p) for p in cls.DESTS]
+        points = [Point(point) for point in cls.ORIGINS + cls.DESTS]
         cls.graph = routing.RestrictedGraph.from_points(points)
 
-    @pytest.mark.parametrize("weight", ["length", "travel_time"])
     @pytest.mark.parametrize("pair", OD_PAIRS)
-    def test_has_path(self, weight, pair):
-        (origin, dest) = pair
-        origin_pt = Point(origin)
-        dest_pt = Point(dest)
-        (_graph, _path) = assert_has_path(
-            origin_pt, dest_pt, graph=self.graph, weight=weight
-        )
-
-    @pytest.mark.parametrize("pair", list(product(ORIGINS, DESTS)))
     def test_multiple_points(self, pair):
         (origin, dest) = pair
         origin_pt = Point(origin)
         dest_pt = Point(dest)
         (_graph, _path) = assert_has_path(origin_pt, dest_pt, graph=self.graph)
 
-    @pytest.mark.parametrize("pair", MAP_PAIRS)
+
+class TestFoliumMap:
+    OD_PAIRS = [
+        ((-71.084983, 42.39193), (-71.078666, 42.386049)),
+        ((-70.894718, 42.254173), (-70.892174, 42.251347)),
+    ]
+
+    @pytest.mark.parametrize("pair", OD_PAIRS)
     def test_folium_map(self, pair):
         (origin, dest) = pair
         origin_pt = Point(origin)
         dest_pt = Point(dest)
-        (_graph, fast_path) = assert_has_path(origin_pt, dest_pt, graph=self.graph)
-        (_graph, short_path) = assert_has_path(origin_pt, dest_pt, graph=self.graph)
-        folium_map = self.graph.folium_map(origin_pt, dest_pt, [fast_path, short_path])
+        (graph, fast_path) = assert_has_path(origin_pt, dest_pt)
+        (graph, short_path) = assert_has_path(origin_pt, dest_pt, graph=graph)
+        folium_map = graph.folium_map(origin_pt, dest_pt, [fast_path, short_path])
         assert folium_map is not None
         assert folium_map._repr_html_()
