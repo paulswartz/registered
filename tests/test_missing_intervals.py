@@ -34,8 +34,12 @@ def test_basic_workflow():
             "IntervalType": "--",
             "FromStopNumber": "5774",
             "FromStopDescription": "Revere St @ Sagamore St",
+            "FromStopLatitude": "42.418574",
+            "FromStopLongitude": "-70.99272",
             "ToStopNumber": "15795",
             "ToStopDescription": "Wonderland Busway",
+            "ToStopLatitude": "42.413385",
+            "ToStopLongitude": "-70.99205",
             "IntervalDescription": "116-Outbound-116-4",
         }
     ]
@@ -51,8 +55,12 @@ def test_ignored_row():
             "IntervalType": "DH",
             "FromStopNumber": "32001",
             "FromStopDescription": "Quincy Center Busway",
+            "FromStopLatitude": "42.251696",
+            "FromStopLongitude": "-71.004973",
             "ToStopNumber": "32004",
             "ToStopDescription": "Quincy Center Busway",
+            "ToStopLatitude": "42.251772",
+            "ToStopLongitude": "-71.005099",
             "IntervalDescription": "220-Outbound-220-3",
         }
     ]

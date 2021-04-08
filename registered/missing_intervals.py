@@ -7,43 +7,10 @@ from pathlib import Path
 import re
 import attr
 import osmnx as ox
-import requests
 from jinja2 import Template
 from shapely.geometry import Point
 import networkx as nx
 from registered import db, routing
-
-GARAGE_LOCATIONS = {
-    "albny": Point(-71.06499, 42.34067),
-    "cabot": Point(-71.05823, 42.34023),
-    "censq": Point(-70.945598, 42.46236),
-    "fell": Point(-71.08891, 42.42174),
-    "ncamb": Point(-71.12895, 42.3971),
-}
-
-
-def points_from_stop_ids(stop_ids):
-    """
-    Finds Points for the given stop IDs.
-
-    Returns a dictionary mapping the stop ID to the Point.
-    """
-    garages = {
-        garage: point
-        for (garage, point) in GARAGE_LOCATIONS.items()
-        if garage in stop_ids
-    }
-    params = {
-        "filter[id]": ",".join(str(i) for i in stop_ids),
-        "fields[stop]": "latitude,longitude",
-    }
-
-    req = requests.get("https://api-v3.mbta.com/stops/", params=params)
-
-    return {
-        j["id"]: Point(j["attributes"]["longitude"], j["attributes"]["latitude"])
-        for j in req.json()["data"]
-    } | garages
 
 
 class Stop(Point):  # pylint: disable=too-few-public-methods
@@ -51,11 +18,16 @@ class Stop(Point):  # pylint: disable=too-few-public-methods
     A location to calculate an interval (either from or to).
     """
 
-    def __init__(self, id, description, point):  # pylint: disable=redefined-builtin
+    def __init__(
+        self, id, description, mdt_latitude, mdt_longitude=None
+    ):  # pylint: disable=redefined-builtin
         """
         Initialize our Stop with the extra parameters.
         """
-        Point.__init__(self, point)
+        if mdt_longitude is None:
+            Point.__init__(self, mdt_latitude)
+        else:
+            Point.__init__(self, (float(mdt_longitude), float(mdt_latitude)))
         self.id = id  # pylint: disable=invalid-name
         self.description = description
 
@@ -67,7 +39,9 @@ class Stop(Point):  # pylint: disable=too-few-public-methods
     )
 
     def __repr__(self):
-        return f"Stop(id={repr(self.id)}, description={repr(self.description)}, point={self.wkt})"
+        return (
+            f"Stop(id={self.id!r}, description={self.description!r}, point={self.wkt})"
+        )
 
     def render(self):
         """
@@ -359,12 +333,12 @@ select
 	'--' AS IntervalType,
 	gn1.geo_node_abbr AS FromStopNumber,
 	gn1.geo_node_name AS FromStopDescription,
-	gn1.mdt_latitude as FromStopLatitude,
-	gn1.mdt_longitude as FromStopLongitude,
+	gn1.mdt_latitude/10000000 as FromStopLatitude,
+	gn1.mdt_longitude/10000000 as FromStopLongitude,
 	gn2.geo_node_abbr AS ToStopNumber,
 	gn2.geo_node_name AS ToStopDescription,
-	gn2.mdt_latitude as ToStopLatitude,
-	gn2.mdt_longitude as ToStopLongitude,
+	gn2.mdt_latitude/10000000 as ToStopLatitude,
+	gn2.mdt_longitude/10000000 as ToStopLongitude,
 	min(RTRIM(r.route_abbr) + '-' + RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
 from
 	pattern_geo_interval_xref pgix
@@ -406,12 +380,12 @@ select
 	END as IntervalType,
 	gn1.geo_node_abbr AS FromStopNumber,
 	gn1.geo_node_name AS FromStopDescription,
-	gn1.mdt_latitude as FromStopLatitude,
-	gn1.mdt_longitude as FromStopLongitude,
+	gn1.mdt_latitude/10000000 as FromStopLatitude,
+	gn1.mdt_longitude/10000000 as FromStopLongitude,
 	gn2.geo_node_abbr AS ToStopNumber,
 	gn2.geo_node_name AS ToStopDescription,
-	gn2.mdt_latitude as ToStopLatitude,
-	gn2.mdt_longitude as ToStopLongitude,
+	gn2.mdt_latitude/10000000 as ToStopLatitude,
+	gn2.mdt_longitude/10000000 as ToStopLongitude,
 	MIN(RTRIM(r.route_abbr) + '-' + RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
 from
 	deadheads dh
@@ -460,31 +434,30 @@ def parse_rows(rows):
     Parse the given list of rows into a Page.
     """
     row_count = len(rows)
-    stop_ids = {
-        stop_id
+    stops = [
+        (
+            Stop(
+                row["FromStopNumber"],
+                row["FromStopDescription"],
+                row["FromStopLatitude"],
+                row["FromStopLongitude"],
+            ),
+            Stop(
+                row["ToStopNumber"],
+                row["ToStopDescription"],
+                row["ToStopLatitude"],
+                row["ToStopLongitude"],
+            ),
+        )
         for row in rows
-        for stop_id in [row["FromStopNumber"], row["ToStopNumber"]]
-    }
-    stop_locations = points_from_stop_ids(stop_ids)
-    missing_stops = {stop_id for stop_id in stop_ids if stop_id not in stop_locations}
-    if missing_stops:
-        raise KeyError(f"unable to find locations for {missing_stops}")
-    graph = routing.RestrictedGraph.from_points(stop_locations.values())
+    ]
+    (from_stops, to_stops) = zip(*stops)
+    graph = routing.RestrictedGraph.from_points(from_stops + to_stops)
 
     page = Page()
 
-    for (index, row) in enumerate(rows, 1):
-        ox.utils.log(f"processing row {index} of {row_count}: {repr(row)}")
-        from_stop = Stop(
-            row["FromStopNumber"],
-            row["FromStopDescription"],
-            stop_locations[row["FromStopNumber"]],
-        )
-        to_stop = Stop(
-            row["ToStopNumber"],
-            row["ToStopDescription"],
-            stop_locations[row["ToStopNumber"]],
-        )
+    for (index, (row, (from_stop, to_stop))) in enumerate(zip(rows, stops), 1):
+        ox.utils.log(f"processing row {index} of {row_count}: {row!r}")
         interval = Interval.from_stops(
             from_stop, to_stop, graph, row["IntervalType"], row["IntervalDescription"]
         )
