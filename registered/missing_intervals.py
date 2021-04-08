@@ -429,7 +429,7 @@ order by
     return [dict(zip(sql_headers, row)) for row in result]
 
 
-def parse_rows(rows):
+def parse_rows(rows, include_ignored=False):
     """
     Parse the given list of rows into a Page.
     """
@@ -458,10 +458,15 @@ def parse_rows(rows):
 
     for (index, (row, (from_stop, to_stop))) in enumerate(zip(rows, stops), 1):
         ox.utils.log(f"processing row {index} of {row_count}: {row!r}")
-        interval = Interval.from_stops(
-            from_stop, to_stop, graph, row["IntervalType"], row["IntervalDescription"]
-        )
-        page.add(interval)
+        if include_ignored or not Interval.should_ignore(from_stop, to_stop):
+            interval = Interval.from_stops(
+                from_stop,
+                to_stop,
+                graph,
+                row["IntervalType"],
+                row["IntervalDescription"],
+            )
+            page.add(interval)
 
     return page
 
@@ -485,7 +490,7 @@ def main(argv):
                 writer.writeheader()
                 writer.writerows(rows)
 
-    page = parse_rows(rows)
+    page = parse_rows(rows, include_ignored=argv.include_ignored)
     with argv.html.open("w") as out_io:
         ox.utils.log(f"Writing HTML to {argv.html}...")
         out_io.write(page.render())
@@ -504,6 +509,11 @@ parser.add_argument(
     "--output-csv",
     type=Path,
     help="CSV file to write the database results to (only if reading from the database)",
+)
+parser.add_argument(
+    "--include-ignored",
+    action="store_true",
+    help="Also include ignored intervals in the HTML output",
 )
 
 if __name__ == "__main__":
