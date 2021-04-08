@@ -4,6 +4,7 @@ Calculate shortest/fastest paths for missing intervals.
 from difflib import SequenceMatcher
 from itertools import count
 import os
+import sys
 import attr
 import folium
 import osmnx as ox
@@ -421,20 +422,19 @@ class RestrictedGraph:
 
         return graph
 
-    @classmethod
-    def add_widths(cls, graph):
+    @staticmethod
+    def add_widths(graph):
         """
-        Add "width_m" to each edge with a width value, normalizing it to meters.
+        Add "width_m" and "maxheight_m" to each edge with a width value, normalizing it to meters.
         """
-        edges = ox.utils_graph.graph_to_gdfs(
-            graph, nodes=False, fill_edge_geometry=False
-        )
-        if "width_m" in edges.columns:
-            return graph
-        if "width" not in edges.columns:
-            return graph
-        width_m = edges["width"].map(clean_width, na_action="ignore").astype(float)
-        nx.set_edge_attributes(graph, values=width_m, name="width_m")
+        widths = nx.get_edge_attributes(graph, "width")
+        widths_m = {k: clean_width(v) for (k, v) in widths.items()}
+        nx.set_edge_attributes(graph, values=widths_m, name="width_m")
+
+        maxheights = nx.get_edge_attributes(graph, "maxheight")
+        maxheights_m = {k: clean_width(v) for (k, v) in maxheights.items()}
+        nx.set_edge_attributes(graph, values=maxheights_m, name="maxheight_m")
+
         return graph
 
     @classmethod
@@ -445,15 +445,26 @@ class RestrictedGraph:
         edges = ox.utils_graph.graph_to_gdfs(
             graph, nodes=False, fill_edge_geometry=False
         )
+        key = ["travel_time", "length"]
 
         # penalize residential streets
         residential = edges["highway"].eq("residential")
-        # penalize narrow streets
-        narrow = edges["width_m"] < 5
+        edges.loc[residential, key] *= 1.5
 
-        edges.loc[residential | narrow, "travel_time"] *= 1.5
+        # penalize narrow streets
+        if "width_m" in edges.columns:
+            narrow = edges["width_m"] < 5
+            edges.loc[narrow, key] *= 1.5
+
+        # heavily penalize edges with a height limit
+        if "maxheight_m" in edges.columns:
+            bus_height = 3.7  # ~12ft
+            edges.loc[
+                edges["maxheight_m"] < bus_height, ["travel_time", "length"]
+            ] = sys.float_info.max
 
         nx.set_edge_attributes(graph, values=edges["travel_time"], name="travel_time")
+        nx.set_edge_attributes(graph, values=edges["length"], name="length")
         return graph
 
     # pylint: disable=too-many-arguments
