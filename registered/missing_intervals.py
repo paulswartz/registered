@@ -341,22 +341,11 @@ def read_database():
     """
     Read the missing intervals from the TransitMaster DB.
     """
-    sql_headers = [
-        "issueid",
-        "routeversionid",
-        "IntervalType",
-        "FromStopNumber",
-        "FromStopDescription",
-        "ToStopNumber",
-        "ToStopDescription",
-        "IntervalDescription",
-    ]
     # 8/20/18 Updated by Jennette Rodemeyer to exclude "and
     # (gni.compass_direction is not null)", since TM17 sets new deadhead
     # intervals to null heading by default. */
     sql = """
 SET NOCOUNT ON;
-USE TMMAIN;
 
 declare @ttvid numeric(9);
 select @ttvid = max(time_table_version_id) from time_table_version;
@@ -364,48 +353,88 @@ select @ttvid = max(time_table_version_id) from time_table_version;
 declare @distval numeric(6);
 SELECT @distval = 0;  -- Distance in feet to look for.
 
-select 1 as issueid, @ttvid+0.2 as routeversionid,
-  '--' AS IntervalType,
-       gn1.geo_node_abbr AS FromStopNumber, gn1.geo_node_name AS FromStopDescription,
-       gn2.geo_node_abbr AS ToStopNumber, gn2.geo_node_name AS ToStopDescription,
-	min(RTRIM(r.route_abbr) +'-'+ RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
-  from pattern_geo_interval_xref pgix
-    inner join pattern p on pgix.pattern_id = p.pattern_id
-    inner join route r on p.route_id = r.route_id
-    inner join route_direction rd on p.route_direction_id = rd.route_direction_id
-    inner join geo_node_interval gni on pgix.geo_node_interval_id = gni.interval_id
-    inner join geo_node gn1 on gni.start_point_id = gn1.geo_node_id
-    inner join geo_node gn2 on gni.end_point_id = gn2.geo_node_id
-  where pgix.time_table_version_id = @ttvid
-    AND ( gni.distance_between_measured = @distval OR gni.distance_between_measured IS NULL )
-    AND ( gni.distance_between_map = @distval OR gni.distance_between_map IS NULL )
- group by gn1.geo_node_abbr, gn1.geo_node_name, gn2.geo_node_abbr, gn2.geo_node_name
+select
+	1 as issueid,
+	@ttvid + 0.2 as routeversionid,
+	'--' AS IntervalType,
+	gn1.geo_node_abbr AS FromStopNumber,
+	gn1.geo_node_name AS FromStopDescription,
+	gn2.geo_node_abbr AS ToStopNumber,
+	gn2.geo_node_name AS ToStopDescription,
+	min(RTRIM(r.route_abbr) + '-' + RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
+from
+	pattern_geo_interval_xref pgix
+inner join pattern p on
+	pgix.pattern_id = p.pattern_id
+inner join route r on
+	p.route_id = r.route_id
+inner join route_direction rd on
+	p.route_direction_id = rd.route_direction_id
+inner join geo_node_interval gni on
+	pgix.geo_node_interval_id = gni.interval_id
+inner join geo_node gn1 on
+	gni.start_point_id = gn1.geo_node_id
+inner join geo_node gn2 on
+	gni.end_point_id = gn2.geo_node_id
+where
+	pgix.time_table_version_id = @ttvid
+	AND ( gni.distance_between_measured = @distval
+		OR gni.distance_between_measured IS NULL )
+	AND ( gni.distance_between_map = @distval
+		OR gni.distance_between_map IS NULL )
+group by
+	gn1.geo_node_abbr,
+	gn1.geo_node_name,
+	gn2.geo_node_abbr,
+	gn2.geo_node_name
 UNION
-select 1 as issueid, @ttvid+0.2 as routeversionid,
-          CASE dh_type
-            WHEN 1 THEN 'DH'
-            WHEN 2 THEN 'PO'
-            ELSE 'PI'
-          END as IntervalType,
-       gn1.geo_node_abbr AS FromStopNumber, gn1.geo_node_name AS FromStopDescription,
-       gn2.geo_node_abbr AS ToStopNumber, gn2.geo_node_name AS ToStopDescription,
-    MIN(RTRIM(r.route_abbr) +'-'+ RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
-  from deadheads dh
-    inner join pattern p on dh.pattern_id = p.pattern_id
-    inner join route r on p.route_id = r.route_id
-    inner join route_direction rd on p.route_direction_id = rd.route_direction_id
-    inner join geo_node_interval gni on dh.geo_node_interval_id = gni.interval_id
-    inner join geo_node gn1 on gni.start_point_id = gn1.geo_node_id
-    inner join geo_node gn2 on gni.end_point_id = gn2.geo_node_id
-  where dh.time_table_version_id = @ttvid
-    AND ( gni.distance_between_measured = @distval OR gni.distance_between_measured IS NULL )
-    AND ( gni.distance_between_map = @distval OR gni.distance_between_map IS NULL )
- group by dh_type, gn1.geo_node_abbr, gn1.geo_node_name, gn2.geo_node_abbr, gn2.geo_node_name
- order by IntervalType, IntervalDescription;
-"""
+select
+	1 as issueid,
+	@ttvid + 0.2 as routeversionid,
+	CASE
+		dh_type WHEN 1 THEN 'DH'
+		WHEN 2 THEN 'PO'
+		ELSE 'PI'
+	END as IntervalType,
+	gn1.geo_node_abbr AS FromStopNumber,
+	gn1.geo_node_name AS FromStopDescription,
+	gn2.geo_node_abbr AS ToStopNumber,
+	gn2.geo_node_name AS ToStopDescription,
+	MIN(RTRIM(r.route_abbr) + '-' + RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
+from
+	deadheads dh
+inner join pattern p on
+	dh.pattern_id = p.pattern_id
+inner join route r on
+	p.route_id = r.route_id
+inner join route_direction rd on
+	p.route_direction_id = rd.route_direction_id
+inner join geo_node_interval gni on
+	dh.geo_node_interval_id = gni.interval_id
+inner join geo_node gn1 on
+	gni.start_point_id = gn1.geo_node_id
+inner join geo_node gn2 on
+	gni.end_point_id = gn2.geo_node_id
+where
+	dh.time_table_version_id = @ttvid
+	AND ( gni.distance_between_measured = @distval
+		OR gni.distance_between_measured IS NULL )
+	AND ( gni.distance_between_map = @distval
+		OR gni.distance_between_map IS NULL )
+group by
+	dh_type,
+	gn1.geo_node_abbr,
+	gn1.geo_node_name,
+	gn2.geo_node_abbr,
+	gn2.geo_node_name
+order by
+	IntervalType,
+	IntervalDescription;
+    """
     conn = db.conn()
     cursor = conn.cursor()
     cursor.execute(sql)
+    sql_headers = [desc[0] for desc in cursor.description]
     result = cursor.fetchall()
     return [dict(zip(sql_headers, row)) for row in result]
 
