@@ -9,7 +9,7 @@ import folium
 import osmnx as ox
 import rtree
 import shapely
-from shapely.geometry import Point, MultiPoint, box
+from shapely.geometry import MultiPoint, box
 import networkx as nx
 from registered.routing_helpers import (
     clean_width,
@@ -49,20 +49,6 @@ class NodesCache:
         Return a new ID to use for a newly-created node.
         """
         return next(self.counter)
-
-    def nearest_point(self, point):
-        """
-        Returns a tuple of (ID, Point) for the closest node to the given Point.
-        """
-        item = next(self.index.nearest(point.bounds, objects=True))
-        point = Point(*item.bbox[:2])
-        return (item.id, point)
-
-    def points(self, ids):
-        """
-        Returns the individual Points for the given node IDs.
-        """
-        return self.gdf.loc[ids, "geometry"]
 
     def update(self, node):
         """
@@ -108,6 +94,8 @@ class EdgesCache:
         # get a few nearest edges to test, then get the actual closest one
         nearest = self.gdf.loc[self.index.nearest(point.bounds, 4, objects="raw")]
         distances = nearest["geometry"].map(point.distance, na_action="ignore")
+        # bias against starting on a motorway
+        distances.loc[nearest.highway.str.startswith("motorway")] *= 3
         if hasattr(point, "description"):
             # bias the distance towards more similar names. this helps put
             # the point on the right edge, given a description like
@@ -117,7 +105,7 @@ class EdgesCache:
                 na_action="ignore",
             )
             if name_ratio.notna().any():
-                niame_ratio = name_ratio.fillna(name_ratio.mean())
+                name_ratio = name_ratio.fillna(name_ratio.mean())
                 distances = distances / name_ratio
         min_distance = distances.min() + 1e-6
         within_distance = nearest.loc[distances <= min_distance]
@@ -230,18 +218,6 @@ class RestrictedGraph:
         """
         if point.wkb in self._created_nodes:
             return self._created_nodes[point.wkb]
-        ox.utils.log(f"finding closest node to {point.wkt}")
-        (nearest_id, nearest_point) = self._nodes_cache.nearest_point(point)
-
-        same_point_tolerance = 0.0001
-        if (
-            nearest_point.distance(point) < same_point_tolerance
-            and self.graph.degree(nearest_id) <= 2
-        ):
-            existing = nearest_id
-            ox.utils.log(f"node already existed {existing}")
-            self._created_nodes[point.wkb] = existing
-            return existing
 
         ox.utils.log(f"finding closest edge to {point.wkt}")
         nearest_edges = self._edges_cache.nearest_edges(point)
@@ -250,18 +226,10 @@ class RestrictedGraph:
         )[0]
 
         ox.utils.log(f"snapping {point.wkt} to {snapped_point.wkt}")
-        (nearest_id, nearest_point) = self._nodes_cache.nearest_point(snapped_point)
-        if (
-            snapped_point.distance(nearest_point) < same_point_tolerance
-            and self.graph.degree(nearest_id) <= 2
-        ):
-            ox.utils.log(f"snapped point already existed {nearest_id}")
-            name = nearest_id
-        else:
-            name = self._nodes_cache.new_id()
-            ox.utils.log(f"creating new node {name}")
-            for nearest_edge in nearest_edges.index:
-                self.split_edge_at_point(nearest_edge, name, snapped_point)
+        name = self._nodes_cache.new_id()
+        ox.utils.log(f"creating new node {name}")
+        for nearest_edge in nearest_edges.index:
+            self.split_edge_at_point(nearest_edge, name, snapped_point)
 
         self._created_nodes[point.wkb] = name
         return name
