@@ -359,8 +359,12 @@ select
 	'--' AS IntervalType,
 	gn1.geo_node_abbr AS FromStopNumber,
 	gn1.geo_node_name AS FromStopDescription,
+	gn1.mdt_latitude as FromStopLatitude,
+	gn1.mdt_longitude as FromStopLongitude,
 	gn2.geo_node_abbr AS ToStopNumber,
 	gn2.geo_node_name AS ToStopDescription,
+	gn2.mdt_latitude as ToStopLatitude,
+	gn2.mdt_longitude as ToStopLongitude,
 	min(RTRIM(r.route_abbr) + '-' + RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
 from
 	pattern_geo_interval_xref pgix
@@ -385,8 +389,12 @@ where
 group by
 	gn1.geo_node_abbr,
 	gn1.geo_node_name,
+	gn1.mdt_latitude,
+	gn1.mdt_longitude,
 	gn2.geo_node_abbr,
-	gn2.geo_node_name
+	gn2.geo_node_name,
+	gn2.mdt_latitude,
+	gn2.mdt_longitude
 UNION
 select
 	1 as issueid,
@@ -398,8 +406,12 @@ select
 	END as IntervalType,
 	gn1.geo_node_abbr AS FromStopNumber,
 	gn1.geo_node_name AS FromStopDescription,
+	gn1.mdt_latitude as FromStopLatitude,
+	gn1.mdt_longitude as FromStopLongitude,
 	gn2.geo_node_abbr AS ToStopNumber,
 	gn2.geo_node_name AS ToStopDescription,
+	gn2.mdt_latitude as ToStopLatitude,
+	gn2.mdt_longitude as ToStopLongitude,
 	MIN(RTRIM(r.route_abbr) + '-' + RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription
 from
 	deadheads dh
@@ -425,8 +437,12 @@ group by
 	dh_type,
 	gn1.geo_node_abbr,
 	gn1.geo_node_name,
+	gn1.mdt_latitude,
+	gn1.mdt_longitude,
 	gn2.geo_node_abbr,
-	gn2.geo_node_name
+	gn2.geo_node_name,
+	gn2.mdt_latitude,
+	gn2.mdt_longitude
 order by
 	IntervalType,
 	IntervalDescription;
