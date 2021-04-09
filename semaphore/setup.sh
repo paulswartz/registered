@@ -6,6 +6,7 @@ echo "Setting up semaphore..."
 export PIPENV_CACHE_DIR=$SEMAPHORE_CACHE_DIR/pipenv
 export ASDF_DATA_DIR=$SEMAPHORE_CACHE_DIR/.asdf
 export OSMNX_CACHE_DIR=$SEMAPHORE_CACHE_DIR/osmnx
+export WORKON_HOME=$SEMAPHORE_CACHE_DIR
 
 if [[ ! -d $ASDF_DATA_DIR ]]; then
   mkdir -p $ASDF_DATA_DIR
