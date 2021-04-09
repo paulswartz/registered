@@ -451,6 +451,11 @@ def parse_rows(rows, include_ignored=False):
         )
         for row in rows
     ]
+
+    if not stops:
+        ox.utils.log("No stops to process.")
+        return None
+
     (from_stops, to_stops) = zip(*stops)
     graph = routing.RestrictedGraph.from_points(from_stops + to_stops)
 
@@ -491,9 +496,10 @@ def main(argv):
                 writer.writerows(rows)
 
     page = parse_rows(rows, include_ignored=argv.include_ignored)
-    with argv.html.open("w") as out_io:
-        ox.utils.log(f"Writing HTML to {argv.html}...")
-        out_io.write(page.render())
+    if page:
+        with argv.html.open("w") as out_io:
+            ox.utils.log(f"Writing HTML to {argv.html}...")
+            out_io.write(page.render())
 
 
 parser = argparse.ArgumentParser(

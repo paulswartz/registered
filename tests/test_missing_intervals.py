@@ -26,6 +26,11 @@ class TestStop:
         )
 
 
+def test_empty():
+    rows = []
+    assert parse_rows(rows) is None
+
+
 def test_basic_workflow():
     rows = [
         {
