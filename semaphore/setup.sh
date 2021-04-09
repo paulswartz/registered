@@ -25,4 +25,4 @@ asdf plugin-update --all
 asdf install
 pip install pip pipenv
 asdf reshim python
-pipenv install -d
+pipenv sync -d
