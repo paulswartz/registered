@@ -57,6 +57,18 @@ def test_no_left_turn():
         ), f"bad turn, coming from {previous_node} going to {next_node}"
 
 
+def test_no_storrow_drive():
+    kenmore_busway = Point(-71.09583, 42.348927)
+    mass_general = Point(-71.0692, 42.3609)
+    (graph, path) = assert_has_path(kenmore_busway, mass_general)
+    for (from_node, to_node) in zip(path, path[1:]):
+        edge = graph.graph.edges[from_node, to_node, 0]
+        if "name" not in edge:
+            continue
+        edge_name = edge["name"]
+        assert edge_name != "Storrow Drive", f"from: {from_node}, to: {to_node}"
+
+
 class TestCompassDirection:
     ORIGINS = [
         (Point(-71.03991910663855, 42.33306759993236), None),

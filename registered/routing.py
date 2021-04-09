@@ -21,13 +21,29 @@ from registered.routing_helpers import (
 )
 
 DEFAULT_COLORS = ["red", "yellow", "blue", "green"]
+USEFUL_NODE_TAGS = []
+USEFUL_WAY_TAGS = [
+    "oneway",
+    "name",
+    "highway",
+    "maxspeed",
+    "service",
+    "access",
+    "width",
+    "maxheight",
+]
 
 
 def configure_osmnx(**kwargs):
     """
     Set configuration for OSMNX.
     """
-    ox.config(cache_folder=os.environ.get("OSMNX_CACHE_DIR", "./cache"), **kwargs)
+    ox.config(
+        cache_folder=os.environ.get("OSMNX_CACHE_DIR", "./cache"),
+        useful_tags_node=USEFUL_NODE_TAGS,
+        useful_tags_way=USEFUL_WAY_TAGS,
+        **kwargs,
+    )
 
 
 class NodesCache:
