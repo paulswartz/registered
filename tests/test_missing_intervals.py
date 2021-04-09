@@ -69,5 +69,5 @@ def test_ignored_row():
             "IntervalDescription": "220-Outbound-220-3",
         }
     ]
-    page = parse_rows(rows)
+    page = parse_rows(rows, include_ignored=True)
     page.render()

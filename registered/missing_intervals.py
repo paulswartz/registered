@@ -110,6 +110,22 @@ class Interval:  # pylint: disable=too-many-instance-attributes
         )
 
     IGNORE_RE = re.compile(r"\d|Inbound|Outbound")
+    IGNORED_PAIRS = {
+        ("4191", "4277"),  # N Main St opp Short St to N Main St opp Memorial Pkwy
+        (
+            "73619",
+            "89617",
+        ),  # 205 Washington St @ East Walpole Loop to 238 Washington St opp May St
+        (
+            "109898",
+            "109821",
+        ),  # Shirley St @ Washington Ave to Veterans Rd @ Washington Ave
+        ("censq", "16653"),  # Lynn New Busway to Market St @ Commuter Rail
+        ("14748", "censq"),  # Lynn Commuter Rail Busway to Lynn New Busway
+        ("fell", "5333"),  # Fellsway Garage to Salem St @ Fellsway Garage
+        ("ncamb", "12295"),  # North Cambridge trackless to North Cambridge Carhouse
+        ("12295", "ncamb"),  # North Cambridge Carhouse to North Cambridge trackless
+    }
 
     @classmethod
     def should_ignore(cls, from_stop, to_stop):
@@ -117,10 +133,12 @@ class Interval:  # pylint: disable=too-many-instance-attributes
         Return True if we should ignore the given interval.
 
         - If the descriptions are the same, except for digits (Busway Berth 1 to Busway Berth 2)
+        - If the descriptions are the same, except for Inbound/Outbound
+        - If the stops are in one of a few specifically ignored pairs of stops
         """
-        return cls.IGNORE_RE.sub("", from_stop.description) == cls.IGNORE_RE.sub(
-            "", to_stop.description
-        )
+        return (from_stop.id, to_stop.id) in cls.IGNORED_PAIRS or cls.IGNORE_RE.sub(
+            "", from_stop.description
+        ) == cls.IGNORE_RE.sub("", to_stop.description)
 
     _template = Template(
         """
@@ -452,6 +470,13 @@ def parse_rows(rows, include_ignored=False):
         for row in rows
     ]
 
+    if not include_ignored:
+        stops = [
+            (from_stop, to_stop)
+            for (from_stop, to_stop) in stops
+            if not Interval.should_ignore(from_stop, to_stop)
+        ]
+
     if not stops:
         ox.utils.log("No stops to process.")
         return None
@@ -463,15 +488,14 @@ def parse_rows(rows, include_ignored=False):
 
     for (index, (row, (from_stop, to_stop))) in enumerate(zip(rows, stops), 1):
         ox.utils.log(f"processing row {index} of {row_count}: {row!r}")
-        if include_ignored or not Interval.should_ignore(from_stop, to_stop):
-            interval = Interval.from_stops(
-                from_stop,
-                to_stop,
-                graph,
-                row["IntervalType"],
-                row["IntervalDescription"],
-            )
-            page.add(interval)
+        interval = Interval.from_stops(
+            from_stop,
+            to_stop,
+            graph,
+            row["IntervalType"],
+            row["IntervalDescription"],
+        )
+        page.add(interval)
 
     return page
 
