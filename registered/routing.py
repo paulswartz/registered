@@ -32,39 +32,20 @@ def configure_osmnx(**kwargs):
 
 class NodesCache:
     """
-    Cache of the nodes Frame, with some helpful methods for querying/updating.
+    Cache of the nodes Frame.
+
+    Currently only used to generate a known-unique ID for a new node.
     """
 
+    # pylint: disable=too-few-public-methods
     def __init__(self, gdf):
-        self.gdf = gdf
         self.counter = count(gdf.index.max() + 1)
-        capacity = int(len(gdf) * 1.1)
-        props = rtree.index.Property(
-            index_capacity=capacity,
-            dimension=2,
-            variant=rtree.index.RT_Star,
-            fill_factor=0.9,
-        )
-        self.index = rtree.index.Index(
-            ((t.Index, t.geometry.bounds, None) for t in gdf.itertuples()),
-            properties=props,
-        )
 
     def new_id(self):
         """
         Return a new ID to use for a newly-created node.
         """
         return next(self.counter)
-
-    def update(self, node):
-        """
-        Updates the cache with the new node.
-        """
-        if node.name in self.gdf.index:
-            return
-        self.gdf = self.gdf.append(node)
-        self.gdf.sort_index(inplace=True)
-        self.index.add(node.name, node.geometry.bounds)
 
 
 class EdgesCache:
@@ -149,10 +130,11 @@ class EdgesCache:
             edge = (from_node, to_node, 0)
         return self.gdf.loc[edge, "geometry"]
 
-    def update(self, gdf):
+    def update(self, graph):
         """
-        Update the cache with the new edges (as a GeoDataFrame).
+        Update the cache with the new edges from the given graph.
         """
+        gdf = ox.graph_to_gdfs(graph, nodes=False)
         gdf = gdf.loc[~gdf.index.isin(self.gdf.index)]
         self.gdf = self.gdf.append(gdf)
         self.gdf.sort_index(inplace=True)
@@ -289,11 +271,8 @@ class RestrictedGraph:
 
         subgraph = self.add_graph_features(subgraph)
 
-        (nodes, edges) = ox.utils_graph.graph_to_gdfs(subgraph)
-
         self.graph.update(subgraph)
-        self._nodes_cache.update(nodes.loc[name])
-        self._edges_cache.update(edges)
+        self._edges_cache.update(subgraph)
 
         return name
 
