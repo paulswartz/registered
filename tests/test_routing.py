@@ -6,11 +6,13 @@ from shapely.geometry import Point
 import networkx as nx
 import osmnx as ox
 
+
 def setup_module():
     """
     Setup for all tests in this module.
     """
     routing.configure_osmnx(log_console=True)
+
 
 # add the below to a test case to write a map with the given path
 # # graph.folium_map(bc_high_school, federal_st, [path]).save("map.html")

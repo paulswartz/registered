@@ -22,7 +22,12 @@ from registered.routing_helpers import (
 
 DEFAULT_COLORS = ["red", "yellow", "blue", "green"]
 
-ox.utils.config(cache_folder=os.environ.get("OSMNX_CACHE_DIR", "./cache"))
+
+def configure_osmnx(**kwargs):
+    """
+    Set configuration for OSMNX.
+    """
+    ox.config(cache_folder=os.environ.get("OSMNX_CACHE_DIR", "./cache"), **kwargs)
 
 
 class NodesCache:

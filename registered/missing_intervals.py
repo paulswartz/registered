@@ -504,7 +504,7 @@ def main(argv):
     """
     Entrypoint for the Missing Intervals Calculation.
     """
-    ox.config(log_console=True)
+    routing.configure_osmnx(log_console=True)
     if argv.input_csv:
         ox.utils.log(f"Reading from {argv.input_csv}...")
         rows = list(csv.DictReader(argv.input_csv.open()))
