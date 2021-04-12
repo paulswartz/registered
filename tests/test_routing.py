@@ -69,6 +69,26 @@ def test_no_storrow_drive():
         assert edge_name != "Storrow Drive", f"from: {from_node}, to: {to_node}"
 
 
+@pytest.mark.parametrize(
+    "points",
+    [
+        [],
+        [Point(0, 0)],
+    ],
+)
+def test_empty_graph(points):
+    with pytest.raises(routing.EmptyGraph):
+        routing.RestrictedGraph.from_points(points)
+
+
+def test_short_path():
+    point = Point(-71.171963, 42.271777)
+    graph = routing.RestrictedGraph.from_points([point])
+    path = graph.shortest_path(Point(0, 0), Point(0, 0))
+    assert len(path) == 1
+    assert graph.compass_direction(path) == None
+
+
 class TestCompassDirection:
     ORIGINS = [
         (Point(-71.03991910663855, 42.33306759993236), None),
@@ -94,7 +114,7 @@ class TestCompassDirection:
         if description is not None:
             setattr(dest, "description", description)
 
-        (graph, path) = assert_has_path(origin, dest)  # , graph=self.graph
+        (graph, path) = assert_has_path(origin, dest)
         assert graph.compass_direction(path) == approx(compass)
 
 

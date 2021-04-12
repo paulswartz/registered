@@ -9,7 +9,6 @@ import attr
 import osmnx as ox
 from jinja2 import Template
 from shapely.geometry import Point
-import networkx as nx
 from registered import db, routing
 
 
@@ -79,11 +78,9 @@ class Interval:  # pylint: disable=too-many-instance-attributes
         fastest_path = shortest_path = None
         if not cls.should_ignore(from_stop, to_stop):
             ox.utils.log(f"calculating interval from {from_stop} to {to_stop}")
-            try:
-                fastest_path = graph.shortest_path(from_stop, to_stop)
+            fastest_path = graph.shortest_path(from_stop, to_stop)
+            if fastest_path is not None:
                 shortest_path = graph.shortest_path(from_stop, to_stop, weight="length")
-            except nx.NetworkXNoPath:
-                pass
 
         if fastest_path == shortest_path:
             shortest_path = None

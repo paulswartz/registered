@@ -3,3 +3,4 @@
 /support/ratings/*
 !/support/ratings/.gitkeep
 /cache/
+/htmlcov

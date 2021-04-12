@@ -21,13 +21,14 @@ black = "*"
 pylint = "*"
 atomicwrites = "*"
 pytest-watch = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.9"
 
 [scripts]
 format = "black registered tests"
-lint = "python -m pylint registered --extension-pkg-whitelist=pyodbc"
+lint = "python -m pylint registered --extension-pkg-whitelist=pyodbc --ignore=flycheck_*.py -j 0"
 test = "pytest tests"
 test_watch = "ptw -w --spool 500 -- --new-first"
 calendar = "python -m registered.calendar"
