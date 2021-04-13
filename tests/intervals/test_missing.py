@@ -1,37 +1,4 @@
-from shapely.geometry import Point
-from registered.intervals.interval import Interval
-from registered.intervals.stop import Stop
-from registered.intervals.missing import parse_rows, IntervalCalculation
-
-
-class TestIntervalCalculation:
-    def test_should_ignore(self):
-        point = Point(0, 0)
-        sullivan_1 = Stop(
-            point, id="29001", description="Sullivan Station Busway - Berth 1"
-        )
-        sullivan_2 = Stop(
-            point, id="20002", description="Sullivan Station Busway - Berth 2"
-        )
-        fields_corner = Stop(point, id="323", description="Fields Corner Busway")
-        chelsea_inbound = Stop(point, id="74630", description="Chelsea - Inbound")
-        chelsea_outbound = Stop(point, id="74631", description="Chelsea - Outbound")
-
-        assert IntervalCalculation.should_ignore(
-            Interval(from_stop=sullivan_1, to_stop=sullivan_1)
-        )
-        assert IntervalCalculation.should_ignore(
-            Interval(from_stop=sullivan_1, to_stop=sullivan_2)
-        )
-        assert (
-            IntervalCalculation.should_ignore(
-                Interval(from_stop=sullivan_1, to_stop=fields_corner)
-            )
-            is False
-        )
-        assert IntervalCalculation.should_ignore(
-            Interval(from_stop=chelsea_inbound, to_stop=chelsea_outbound)
-        )
+from registered.intervals.missing import parse_rows
 
 
 def test_empty():
@@ -58,7 +25,14 @@ def test_basic_workflow():
         }
     ]
     page = parse_rows(rows)
-    page.render()
+    rendered = page.render()
+    assert "5774" in rendered
+    assert "Revere St @ Sagamore St" in rendered
+    assert "15795" in rendered
+    assert "Wonderland Busway" in rendered
+    assert "Fastest (red)" in rendered
+    assert "Revenue" in rendered, rendered
+    assert "116-Outbound-116-4" in rendered, rendered
 
 
 def test_ignored_row():

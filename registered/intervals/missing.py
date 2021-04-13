@@ -5,101 +5,75 @@ import argparse
 import csv
 from pathlib import Path
 import re
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import attr
-import folium
 import osmnx as ox
 from jinja2 import Template
 from registered import db
 from .routing import RestrictedGraph, configure_osmnx
 from .interval import Interval
+from .calculation import IntervalCalculation, should_ignore_interval
 
 
-@attr.define(kw_only=True)
-class IntervalCalculation:  # pylint: disable=too-many-instance-attributes
+@attr.define
+class Page:
     """
-    One interval calculation.
+    A full HTML page of interval calculations.
     """
 
-    interval: Interval
     _graph: RestrictedGraph
-    fastest_path: Optional[List[int]] = attr.ib(default=None)
-    shortest_path: Optional[List[int]] = attr.ib(default=None)
-    folium_map: Optional[folium.Map] = attr.ib(default=None)
+    calculations: List[IntervalCalculation] = attr.ib(factory=list)
 
-    @classmethod
-    def calculate(
-        cls, interval: Interval, graph: RestrictedGraph
-    ) -> "IntervalCalculation":
+    def add(self, calculation: IntervalCalculation):
         """
-        Create an interval given the from/to stops.
+        Add an interval to the page for future rendering.
         """
-        fastest_path = shortest_path = None
-        if not cls.should_ignore(interval):
-            ox.utils.log(
-                f"calculating interval from {interval.from_stop} to {interval.to_stop}"
-            )
-            fastest_path = graph.shortest_path(interval.from_stop, interval.to_stop)
-            if fastest_path is not None:
-                shortest_path = graph.shortest_path(
-                    interval.from_stop, interval.to_stop, weight="length"
-                )
-
-        if fastest_path == shortest_path:
-            shortest_path = None
-
-        paths = [path for path in [fastest_path, shortest_path] if path is not None]
-
-        folium_map = graph.folium_map(
-            interval.from_stop,
-            interval.to_stop,
-            paths,
-            height=600,
-            width=600,
-        )
-
-        return cls(
-            interval=interval,
-            graph=graph,
-            fastest_path=fastest_path,
-            shortest_path=shortest_path,
-            folium_map=folium_map,
-        )
-
-    IGNORE_RE = re.compile(r"\d|Inbound|Outbound")
-    IGNORED_PAIRS = {
-        ("4191", "4277"),  # N Main St opp Short St to N Main St opp Memorial Pkwy
-        (
-            "73619",
-            "89617",
-        ),  # 205 Washington St @ East Walpole Loop to 238 Washington St opp May St
-        (
-            "109898",
-            "109821",
-        ),  # Shirley St @ Washington Ave to Veterans Rd @ Washington Ave
-        ("censq", "16653"),  # Lynn New Busway to Market St @ Commuter Rail
-        ("14748", "censq"),  # Lynn Commuter Rail Busway to Lynn New Busway
-        ("fell", "5333"),  # Fellsway Garage to Salem St @ Fellsway Garage
-        ("ncamb", "12295"),  # North Cambridge trackless to North Cambridge Carhouse
-        ("12295", "ncamb"),  # North Cambridge Carhouse to North Cambridge trackless
-    }
-
-    @classmethod
-    def should_ignore(cls, interval: Interval) -> bool:
-        """
-        Return True if we should ignore the given interval.
-
-        - If the descriptions are the same, except for digits (Busway Berth 1 to Busway Berth 2)
-        - If the descriptions are the same, except for Inbound/Outbound
-        - If the stops are in one of a few specifically ignored pairs of stops
-        """
-        from_stop = interval.from_stop
-        to_stop = interval.to_stop
-        return (from_stop.id, to_stop.id) in cls.IGNORED_PAIRS or cls.IGNORE_RE.sub(
-            "", from_stop.description
-        ) == cls.IGNORE_RE.sub("", to_stop.description)
+        self.calculations.append(calculation)
 
     _template = Template(
+        """
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+      <meta name="viewport" content="width=device-width,
+            initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      <style type="text/css">
+        html {
+          padding: 2em;
+        }
+        td {
+          padding: 0 3em 1em;
+        }
+        td:first-child {
+          padding-left: 0;
+        }
+        .folium-map {
+          display: block;
+          height: 50em;
+          width: 50em;
+        }
+      </style>
+
+      <script>
+        L_NO_TOUCH = false;
+        L_DISABLE_3D = false;
+      </script>
+
+      {% for script in scripts %}<script defer src="{{script}}"></script>{% endfor %}
+      {% for sheet in stylesheets %}<link rel="stylesheet" href="{{sheet}}"/>{% endfor %}
+    </head>
+    <body>
+      {% for calculation in this.calculations %}
+      {% if loop.index > 1 %}<hr>{% endif %}
+      {{ this.render_calculation(calculation) }}
+      {% endfor %}
+    </body>
+    </html>
+    """
+    )
+
+    _calculation_template = Template(
         """
     <div>
       <table>
@@ -114,9 +88,9 @@ class IntervalCalculation:  # pylint: disable=too-many-instance-attributes
         </thead>
         <tbody>
           <tr>
-            <td>{{ this.render_stop(this.interval.from_stop) }}</td>
-            <td>{{ this.render_stop(this.interval.to_stop) }}</td>
-            <td>{{ this.interval_type }}</td>
+            <td>{{ page.render_stop(this.from_stop) }}</td>
+            <td>{{ page.render_stop(this.to_stop) }}</td>
+            <td>{{ this.interval_type}}</td>
             <td>{{ this.description }}</td>
             <td>
               <a target="_blank"
@@ -153,22 +127,34 @@ class IntervalCalculation:  # pylint: disable=too-many-instance-attributes
     """
     )
 
-    def render(self):
+    _stop_template = Template(
         """
-        Render to HTML.
+    {{ this.description }} ({{ this.id }})<br>
+    <a href="{{osm_url | e}}">OpenStreetMap</a>
+    """
+    )
+
+    def render_calculation(self, calculation: IntervalCalculation) -> str:
+        """
+        Render the calculation as HTML.
         """
         google_maps_url = self._google_maps_url(
-            self.interval.from_stop, self.interval.to_stop
+            calculation.from_stop, calculation.to_stop
         )
-        osm_url = self._osm_url(self.interval.from_stop, self.interval.to_stop)
-        results = self._calculate_results()
-        self.folium_map.render()
-        map_root = self.folium_map.get_root()
+        osm_url = self._osm_url(calculation.from_stop, calculation.to_stop)
+        results = self._calculate_results(calculation)
+        folium_map = self._graph.folium_map(
+            calculation.from_stop, calculation.to_stop, calculation.paths()
+        )
+
+        folium_map.render()
+        map_root = folium_map.get_root()
         folium_map_html = map_root.html.render()
         folium_map_script = map_root.script.render()
 
-        return self._template.render(
-            this=self,
+        return self._calculation_template.render(
+            page=self,
+            this=calculation,
             google_maps_url=google_maps_url,
             osm_url=osm_url,
             results=results,
@@ -176,25 +162,20 @@ class IntervalCalculation:  # pylint: disable=too-many-instance-attributes
             folium_map_script=folium_map_script,
         )
 
-    def _calculate_results(self):
-        if not self.fastest_path:
-            return [["", 0, "NULL"]]
-        results = [
+    def _calculate_results(
+        self, calculation: IntervalCalculation
+    ) -> List[Tuple[str, str, str]]:
+        named_paths = zip(["Fastest (red)", "Shortest (yellow)"], calculation.paths())
+        if not named_paths:
+            return [("", "0", "NULL")]
+        return [
             (
-                "Fastest (red)",
-                self.meters_to_feet(self._graph.path_length(self.fastest_path)),
-                self._graph.compass_direction(self.fastest_path),
+                name,
+                str(self.meters_to_feet(self._graph.path_length(path))),
+                str(self._graph.compass_direction(path)),
             )
+            for (name, path) in named_paths
         ]
-        if self.shortest_path:
-            results.append(
-                (
-                    "Shortest (yellow)",
-                    self.meters_to_feet(self._graph.path_length(self.shortest_path)),
-                    self._graph.compass_direction(self.shortest_path),
-                )
-            )
-        return results
 
     @staticmethod
     def _google_maps_url(from_stop, to_stop):
@@ -212,13 +193,6 @@ class IntervalCalculation:  # pylint: disable=too-many-instance-attributes
             f"route={from_stop.y},{from_stop.x};{to_stop.y},{to_stop.x}"
         )
 
-    _stop_template = Template(
-        """
-    {{ stop.description }} ({{ stop.id }})<br>
-    <a href="{{osm_url | e}}">OpenStreetMap</a>
-    """
-    )
-
     @classmethod
     def render_stop(cls, stop):
         """
@@ -229,7 +203,7 @@ class IntervalCalculation:  # pylint: disable=too-many-instance-attributes
             f"lat={stop.y}&lon={stop.x}"
             f"#map=18/{stop.y}/{stop.x}"
         )
-        return cls._stop_template.render(stop=stop, osm_url=osm_url)
+        return cls._stop_template.render(this=stop, osm_url=osm_url)
 
     @staticmethod
     def meters_to_feet(meters):
@@ -237,64 +211,6 @@ class IntervalCalculation:  # pylint: disable=too-many-instance-attributes
         Convert the given distance in meters to feet.
         """
         return int(meters * 3.281)
-
-
-@attr.s
-class Page:
-    """
-    A full HTML page of interval calculations.
-    """
-
-    intervals = attr.ib(default=[])
-
-    def add(self, interval):
-        """
-        Add an interval to the page for future rendering.
-        """
-        self.intervals.append(interval)
-
-    _template = Template(
-        """
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-      <meta name="viewport" content="width=device-width,
-            initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-      <style type="text/css">
-        html {
-          padding: 2em;
-        }
-        td {
-          padding: 0 3em 1em;
-        }
-        td:first-child {
-          padding-left: 0;
-        }
-        .folium-map {
-          display: block;
-          height: 50em;
-          width: 50em;
-        }
-      </style>
-
-      <script>
-        L_NO_TOUCH = false;
-        L_DISABLE_3D = false;
-      </script>
-
-      {% for script in scripts %}<script defer src="{{script}}"></script>{% endfor %}
-      {% for sheet in stylesheets %}<link rel="stylesheet" href="{{sheet}}"/>{% endfor %}
-    </head>
-    <body>
-      {% for interval in this.intervals %}
-      {% if loop.index > 1 %}<hr>{% endif %}
-      {{ interval.render() }}
-      {% endfor %}
-    </body>
-    </html>
-    """
-    )
 
     def render(self):
         """
@@ -442,9 +358,7 @@ def parse_rows(rows, include_ignored=False):
 
     if not include_ignored:
         intervals = [
-            interval
-            for interval in intervals
-            if not IntervalCalculation.should_ignore(interval)
+            interval for interval in intervals if not should_ignore_interval(interval)
         ]
 
     if not intervals:
@@ -456,7 +370,7 @@ def parse_rows(rows, include_ignored=False):
     )
     graph = RestrictedGraph.from_points(from_stops + to_stops)
 
-    page = Page()
+    page = Page(graph=graph)
 
     for (index, interval) in enumerate(intervals, 1):
         ox.utils.log(f"processing row {index} of {row_count}: {interval!r}")
