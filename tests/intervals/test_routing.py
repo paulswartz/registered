@@ -1,5 +1,5 @@
 from itertools import product
-from registered import routing
+from registered.intervals import routing
 import pytest
 from pytest import approx
 from shapely.geometry import Point

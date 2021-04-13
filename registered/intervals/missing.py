@@ -9,7 +9,8 @@ import attr
 import osmnx as ox
 from jinja2 import Template
 from shapely.geometry import Point
-from registered import db, routing
+from registered import db
+from .routing import RestrictedGraph, configure_osmnx
 
 
 class Stop(Point):  # pylint: disable=too-few-public-methods
@@ -479,7 +480,7 @@ def parse_rows(rows, include_ignored=False):
         return None
 
     (from_stops, to_stops) = zip(*stops)
-    graph = routing.RestrictedGraph.from_points(from_stops + to_stops)
+    graph = RestrictedGraph.from_points(from_stops + to_stops)
 
     page = Page()
 
@@ -501,7 +502,7 @@ def main(argv):
     """
     Entrypoint for the Missing Intervals Calculation.
     """
-    routing.configure_osmnx(log_console=True)
+    configure_osmnx(log_console=True)
     if argv.input_csv:
         ox.utils.log(f"Reading from {argv.input_csv}...")
         rows = list(csv.DictReader(argv.input_csv.open()))

@@ -12,7 +12,7 @@ import rtree
 import shapely
 from shapely.geometry import MultiPoint, box
 import networkx as nx
-from registered.routing_helpers import (
+from .routing_helpers import (
     clean_width,
     ensure_set,
     restrictions_in_polygon,

@@ -38,7 +38,7 @@ stop_comparison = "python -m registered.stop_comparison"
 location_comparison = "python -m registered.location_comparison"
 merge = "python -m registered.merge"
 validate = "python -m registered.validate"
-missing_intervals = "python -m registered.missing_intervals"
+missing_intervals = "python -m registered.intervals.missing"
 
 [pipenv]
 allow_prereleases = true

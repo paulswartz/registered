@@ -1,5 +1,5 @@
 from shapely.geometry import Point
-from registered.missing_intervals import parse_rows, Interval, Stop
+from registered.intervals.missing import parse_rows, Interval, Stop
 
 
 class TestInterval:
