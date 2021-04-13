@@ -1,29 +1,25 @@
 from shapely.geometry import Point
-from registered.intervals.missing import parse_rows, Interval, Stop
+from registered.intervals.stop import Stop
+from registered.intervals.missing import parse_rows, Interval
 
 
 class TestInterval:
     def test_should_ignore(self):
         point = Point(0, 0)
-        sullivan_1 = Stop("29001", "Sullivan Station Busway - Berth 1", point)
-        sullivan_2 = Stop("20002", "Sullivan Station Busway - Berth 2", point)
-        fields_corner = Stop("323", "Fields Corner Busway", point)
-        chelsea_inbound = Stop("74630", "Chelsea - Inbound", point)
-        chelsea_outbound = Stop("74631", "Chelsea - Outbound", point)
+        sullivan_1 = Stop(
+            point, id="29001", description="Sullivan Station Busway - Berth 1"
+        )
+        sullivan_2 = Stop(
+            point, id="20002", description="Sullivan Station Busway - Berth 2"
+        )
+        fields_corner = Stop(point, id="323", description="Fields Corner Busway")
+        chelsea_inbound = Stop(point, id="74630", description="Chelsea - Inbound")
+        chelsea_outbound = Stop(point, id="74631", description="Chelsea - Outbound")
 
         assert Interval.should_ignore(sullivan_1, sullivan_1)
         assert Interval.should_ignore(sullivan_1, sullivan_2)
         assert Interval.should_ignore(sullivan_1, fields_corner) == False
         assert Interval.should_ignore(chelsea_inbound, chelsea_outbound)
-
-
-class TestStop:
-    def test_repr(self):
-        stop = Stop("123", "Description", Point(-71, 40))
-        assert (
-            repr(stop)
-            == "Stop(id='123', description='Description', point=POINT (-71 40))"
-        )
 
 
 def test_empty():

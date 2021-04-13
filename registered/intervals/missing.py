@@ -11,48 +11,7 @@ from jinja2 import Template
 from shapely.geometry import Point
 from registered import db
 from .routing import RestrictedGraph, configure_osmnx
-
-
-class Stop(Point):  # pylint: disable=too-few-public-methods
-    """
-    A location to calculate an interval (either from or to).
-    """
-
-    def __init__(
-        self, id, description, mdt_latitude, mdt_longitude=None
-    ):  # pylint: disable=redefined-builtin
-        """
-        Initialize our Stop with the extra parameters.
-        """
-        if mdt_longitude is None:
-            Point.__init__(self, mdt_latitude)
-        else:
-            Point.__init__(self, (float(mdt_longitude), float(mdt_latitude)))
-        self.id = id  # pylint: disable=invalid-name
-        self.description = description
-
-    _template = Template(
-        """
-    {{ this.description }} ({{ this.id }})<br>
-    <a href="{{osm_url | e}}">OpenStreetMap</a>
-    """
-    )
-
-    def __repr__(self):
-        return (
-            f"Stop(id={self.id!r}, description={self.description!r}, point={self.wkt})"
-        )
-
-    def render(self):
-        """
-        Render to HTML.
-        """
-        osm_url = (
-            f"https://www.openstreetmap.org/query?"
-            f"lat={self.y}&lon={self.x}"
-            f"#map=18/{self.y}/{self.x}"
-        )
-        return self._template.render(this=self, osm_url=osm_url)
+from .stop import Stop
 
 
 @attr.s
@@ -153,8 +112,8 @@ class Interval:  # pylint: disable=too-many-instance-attributes
         </thead>
         <tbody>
           <tr>
-            <td>{{ this.from_stop.render() }}</td>
-            <td>{{ this.to_stop.render() }}</td>
+            <td>{{ this.render_stop(this.from_stop) }}</td>
+            <td>{{ this.render_stop(this.to_stop) }}</td>
             <td>{{ this.interval_type }}</td>
             <td>{{ this.description }}</td>
             <td>
@@ -240,6 +199,25 @@ class Interval:  # pylint: disable=too-many-instance-attributes
                 )
             )
         return results
+
+    _stop_template = Template(
+        """
+    {{ stop.description }} ({{ stop.id }})<br>
+    <a href="{{osm_url | e}}">OpenStreetMap</a>
+    """
+    )
+
+    @classmethod
+    def render_stop(cls, stop):
+        """
+        Render a stop to HTML.
+        """
+        osm_url = (
+            f"https://www.openstreetmap.org/query?"
+            f"lat={stop.y}&lon={stop.x}"
+            f"#map=18/{stop.y}/{stop.x}"
+        )
+        return cls._stop_template.render(stop=stop, osm_url=osm_url)
 
     @staticmethod
     def meters_to_feet(meters):
@@ -453,16 +431,14 @@ def parse_rows(rows, include_ignored=False):
     stops = [
         (
             Stop(
-                row["FromStopNumber"],
-                row["FromStopDescription"],
-                row["FromStopLatitude"],
-                row["FromStopLongitude"],
+                (row["FromStopLongitude"], row["FromStopLatitude"]),
+                id=row["FromStopNumber"],
+                description=row["FromStopDescription"],
             ),
             Stop(
-                row["ToStopNumber"],
-                row["ToStopDescription"],
-                row["ToStopLatitude"],
-                row["ToStopLongitude"],
+                (row["ToStopLongitude"], row["ToStopLatitude"]),
+                id=row["ToStopNumber"],
+                description=row["ToStopDescription"],
             ),
         )
         for row in rows
