@@ -5,42 +5,45 @@ import argparse
 import csv
 from pathlib import Path
 import re
+from typing import Optional, List
 import attr
+import folium
 import osmnx as ox
 from jinja2 import Template
-from shapely.geometry import Point
 from registered import db
 from .routing import RestrictedGraph, configure_osmnx
-from .stop import Stop
+from .interval import Interval
 
 
-@attr.s
-class Interval:  # pylint: disable=too-many-instance-attributes
+@attr.define(kw_only=True)
+class IntervalCalculation:  # pylint: disable=too-many-instance-attributes
     """
     One interval calculation.
     """
 
-    from_stop = attr.ib()
-    to_stop = attr.ib()
-    interval_type = attr.ib()
-    description = attr.ib()
-    graph = attr.ib(default=None)
-    fastest_path = attr.ib(default=None)
-    shortest_path = attr.ib(default=None)
-    folium_map = attr.ib(default=None)
+    interval: Interval
+    _graph: RestrictedGraph
+    fastest_path: Optional[List[int]] = attr.ib(default=None)
+    shortest_path: Optional[List[int]] = attr.ib(default=None)
+    folium_map: Optional[folium.Map] = attr.ib(default=None)
 
-    # pylint: disable=too-many-arguments
     @classmethod
-    def from_stops(cls, from_stop, to_stop, graph, interval_type, interval_description):
+    def calculate(
+        cls, interval: Interval, graph: RestrictedGraph
+    ) -> "IntervalCalculation":
         """
         Create an interval given the from/to stops.
         """
         fastest_path = shortest_path = None
-        if not cls.should_ignore(from_stop, to_stop):
-            ox.utils.log(f"calculating interval from {from_stop} to {to_stop}")
-            fastest_path = graph.shortest_path(from_stop, to_stop)
+        if not cls.should_ignore(interval):
+            ox.utils.log(
+                f"calculating interval from {interval.from_stop} to {interval.to_stop}"
+            )
+            fastest_path = graph.shortest_path(interval.from_stop, interval.to_stop)
             if fastest_path is not None:
-                shortest_path = graph.shortest_path(from_stop, to_stop, weight="length")
+                shortest_path = graph.shortest_path(
+                    interval.from_stop, interval.to_stop, weight="length"
+                )
 
         if fastest_path == shortest_path:
             shortest_path = None
@@ -48,22 +51,19 @@ class Interval:  # pylint: disable=too-many-instance-attributes
         paths = [path for path in [fastest_path, shortest_path] if path is not None]
 
         folium_map = graph.folium_map(
-            from_stop,
-            to_stop,
+            interval.from_stop,
+            interval.to_stop,
             paths,
             height=600,
             width=600,
         )
 
         return cls(
-            from_stop,
-            to_stop,
-            interval_type,
-            interval_description,
-            graph,
-            fastest_path,
-            shortest_path,
-            folium_map,
+            interval=interval,
+            graph=graph,
+            fastest_path=fastest_path,
+            shortest_path=shortest_path,
+            folium_map=folium_map,
         )
 
     IGNORE_RE = re.compile(r"\d|Inbound|Outbound")
@@ -85,7 +85,7 @@ class Interval:  # pylint: disable=too-many-instance-attributes
     }
 
     @classmethod
-    def should_ignore(cls, from_stop, to_stop):
+    def should_ignore(cls, interval: Interval) -> bool:
         """
         Return True if we should ignore the given interval.
 
@@ -93,6 +93,8 @@ class Interval:  # pylint: disable=too-many-instance-attributes
         - If the descriptions are the same, except for Inbound/Outbound
         - If the stops are in one of a few specifically ignored pairs of stops
         """
+        from_stop = interval.from_stop
+        to_stop = interval.to_stop
         return (from_stop.id, to_stop.id) in cls.IGNORED_PAIRS or cls.IGNORE_RE.sub(
             "", from_stop.description
         ) == cls.IGNORE_RE.sub("", to_stop.description)
@@ -112,8 +114,8 @@ class Interval:  # pylint: disable=too-many-instance-attributes
         </thead>
         <tbody>
           <tr>
-            <td>{{ this.render_stop(this.from_stop) }}</td>
-            <td>{{ this.render_stop(this.to_stop) }}</td>
+            <td>{{ this.render_stop(this.interval.from_stop) }}</td>
+            <td>{{ this.render_stop(this.interval.to_stop) }}</td>
             <td>{{ this.interval_type }}</td>
             <td>{{ this.description }}</td>
             <td>
@@ -155,16 +157,10 @@ class Interval:  # pylint: disable=too-many-instance-attributes
         """
         Render to HTML.
         """
-        google_maps_url = (
-            f"https://www.google.com/maps/dir/?api=1&"
-            f"travelmode=driving&"
-            f"origin={ self.from_stop.y },{ self.from_stop.x }&"
-            f"destination={ self.to_stop.y },{ self.to_stop.x }"
+        google_maps_url = self._google_maps_url(
+            self.interval.from_stop, self.interval.to_stop
         )
-        osm_url = (
-            f"https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&"
-            f"route={self.from_stop.y},{self.from_stop.x};{self.to_stop.y},{self.to_stop.x}"
-        )
+        osm_url = self._osm_url(self.interval.from_stop, self.interval.to_stop)
         results = self._calculate_results()
         self.folium_map.render()
         map_root = self.folium_map.get_root()
@@ -186,19 +182,35 @@ class Interval:  # pylint: disable=too-many-instance-attributes
         results = [
             (
                 "Fastest (red)",
-                self.meters_to_feet(self.graph.path_length(self.fastest_path)),
-                self.graph.compass_direction(self.fastest_path),
+                self.meters_to_feet(self._graph.path_length(self.fastest_path)),
+                self._graph.compass_direction(self.fastest_path),
             )
         ]
         if self.shortest_path:
             results.append(
                 (
                     "Shortest (yellow)",
-                    self.meters_to_feet(self.graph.path_length(self.shortest_path)),
-                    self.graph.compass_direction(self.shortest_path),
+                    self.meters_to_feet(self._graph.path_length(self.shortest_path)),
+                    self._graph.compass_direction(self.shortest_path),
                 )
             )
         return results
+
+    @staticmethod
+    def _google_maps_url(from_stop, to_stop):
+        return (
+            f"https://www.google.com/maps/dir/?api=1&"
+            f"travelmode=driving&"
+            f"origin={ from_stop.y },{ from_stop.x }&"
+            f"destination={ to_stop.y },{ to_stop.x }"
+        )
+
+    @staticmethod
+    def _osm_url(from_stop, to_stop):
+        return (
+            f"https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&"
+            f"route={from_stop.y},{from_stop.x};{to_stop.y},{to_stop.x}"
+        )
 
     _stop_template = Template(
         """
@@ -324,7 +336,8 @@ SELECT @distval = 0;  -- Distance in feet to look for.
 select
 	1 as issueid,
 	@ttvid + 0.2 as routeversionid,
-	'--' AS IntervalType,
+    gni.interval_id as IntervalId,
+	0 AS IntervalType,
 	gn1.geo_node_abbr AS FromStopNumber,
 	gn1.geo_node_name AS FromStopDescription,
 	gn1.mdt_latitude/10000000 as FromStopLatitude,
@@ -367,11 +380,8 @@ UNION
 select
 	1 as issueid,
 	@ttvid + 0.2 as routeversionid,
-	CASE
-		dh_type WHEN 1 THEN 'DH'
-		WHEN 2 THEN 'PO'
-		ELSE 'PI'
-	END as IntervalType,
+    gni.interval_id as IntervalId,
+    DH_TYPE as IntervalType,
 	gn1.geo_node_abbr AS FromStopNumber,
 	gn1.geo_node_name AS FromStopDescription,
 	gn1.mdt_latitude/10000000 as FromStopLatitude,
@@ -428,48 +438,30 @@ def parse_rows(rows, include_ignored=False):
     Parse the given list of rows into a Page.
     """
     row_count = len(rows)
-    stops = [
-        (
-            Stop(
-                (row["FromStopLongitude"], row["FromStopLatitude"]),
-                id=row["FromStopNumber"],
-                description=row["FromStopDescription"],
-            ),
-            Stop(
-                (row["ToStopLongitude"], row["ToStopLatitude"]),
-                id=row["ToStopNumber"],
-                description=row["ToStopDescription"],
-            ),
-        )
-        for row in rows
-    ]
+    intervals = [Interval.from_row(row) for row in rows]
 
     if not include_ignored:
-        stops = [
-            (from_stop, to_stop)
-            for (from_stop, to_stop) in stops
-            if not Interval.should_ignore(from_stop, to_stop)
+        intervals = [
+            interval
+            for interval in intervals
+            if not IntervalCalculation.should_ignore(interval)
         ]
 
-    if not stops:
-        ox.utils.log("No stops to process.")
+    if not intervals:
+        ox.utils.log("No intervals to process.")
         return None
 
-    (from_stops, to_stops) = zip(*stops)
+    (from_stops, to_stops) = zip(
+        *((interval.from_stop, interval.to_stop) for interval in intervals)
+    )
     graph = RestrictedGraph.from_points(from_stops + to_stops)
 
     page = Page()
 
-    for (index, (row, (from_stop, to_stop))) in enumerate(zip(rows, stops), 1):
-        ox.utils.log(f"processing row {index} of {row_count}: {row!r}")
-        interval = Interval.from_stops(
-            from_stop,
-            to_stop,
-            graph,
-            row["IntervalType"],
-            row["IntervalDescription"],
-        )
-        page.add(interval)
+    for (index, interval) in enumerate(intervals, 1):
+        ox.utils.log(f"processing row {index} of {row_count}: {interval!r}")
+        calc = IntervalCalculation.calculate(interval=interval, graph=graph)
+        page.add(calc)
 
     return page
 

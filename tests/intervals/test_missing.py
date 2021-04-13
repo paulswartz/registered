@@ -1,9 +1,10 @@
 from shapely.geometry import Point
+from registered.intervals.interval import Interval
 from registered.intervals.stop import Stop
-from registered.intervals.missing import parse_rows, Interval
+from registered.intervals.missing import parse_rows, IntervalCalculation
 
 
-class TestInterval:
+class TestIntervalCalculation:
     def test_should_ignore(self):
         point = Point(0, 0)
         sullivan_1 = Stop(
@@ -16,10 +17,21 @@ class TestInterval:
         chelsea_inbound = Stop(point, id="74630", description="Chelsea - Inbound")
         chelsea_outbound = Stop(point, id="74631", description="Chelsea - Outbound")
 
-        assert Interval.should_ignore(sullivan_1, sullivan_1)
-        assert Interval.should_ignore(sullivan_1, sullivan_2)
-        assert Interval.should_ignore(sullivan_1, fields_corner) == False
-        assert Interval.should_ignore(chelsea_inbound, chelsea_outbound)
+        assert IntervalCalculation.should_ignore(
+            Interval(from_stop=sullivan_1, to_stop=sullivan_1)
+        )
+        assert IntervalCalculation.should_ignore(
+            Interval(from_stop=sullivan_1, to_stop=sullivan_2)
+        )
+        assert (
+            IntervalCalculation.should_ignore(
+                Interval(from_stop=sullivan_1, to_stop=fields_corner)
+            )
+            is False
+        )
+        assert IntervalCalculation.should_ignore(
+            Interval(from_stop=chelsea_inbound, to_stop=chelsea_outbound)
+        )
 
 
 def test_empty():
@@ -32,7 +44,8 @@ def test_basic_workflow():
         {
             "issueid": "1",
             "routeversionid": "138.2",
-            "IntervalType": "--",
+            "IntervalId": 1234,
+            "IntervalType": 0,
             "FromStopNumber": "5774",
             "FromStopDescription": "Revere St @ Sagamore St",
             "FromStopLatitude": "42.418574",
@@ -53,7 +66,8 @@ def test_ignored_row():
         {
             "issueid": "1",
             "routeversionid": "138.2",
-            "IntervalType": "DH",
+            "IntervalId": "1234",
+            "IntervalType": "1",
             "FromStopNumber": "32001",
             "FromStopDescription": "Quincy Center Busway",
             "FromStopLatitude": "42.251696",
