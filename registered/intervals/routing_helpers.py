@@ -16,7 +16,7 @@ def clean_width(width_str):
     """
     FEET_TO_METERS = 0.3048  # pylint: disable=invalid-name
 
-    if width_str in {"t", "none", "default"}:
+    if width_str in {"t", "none", "default", "below_default"}:
         return None
 
     try:
