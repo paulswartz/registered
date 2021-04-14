@@ -1,5 +1,24 @@
-from registered.intervals.stop import Stop
-from registered.intervals.interval import Interval, IntervalType
+from shapely.geometry import Point
+from registered.intervals.interval import Stop, Interval, IntervalType
+
+
+class TestStop:
+    def test_from_tuple(self):
+        actual = Stop(("-1", "-2"), id="123", description="hi")
+        assert actual.id == "123"
+        assert actual.description == "hi"
+        assert actual.wkt == "POINT (-1 -2)"
+        assert actual.x == -1
+        assert actual.y == -2
+        assert repr(actual) == "Stop(Point(-1.0, -2.0), id='123', description='hi')"
+
+    def test_from_point(self):
+        actual = Stop(Point((2, 3)), id="456")
+        assert actual.id == "456"
+        assert actual.description is None
+        assert actual.wkt == "POINT (2 3)"
+        assert actual.x == 2
+        assert actual.y == 3
 
 
 class TestInterval:

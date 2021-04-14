@@ -1,6 +1,5 @@
 from shapely.geometry import Point
-from registered.intervals.interval import Interval
-from registered.intervals.stop import Stop
+from registered.intervals.interval import Stop, Interval
 from registered.intervals.calculation import should_ignore_interval
 
 

@@ -5,9 +5,8 @@ import re
 from typing import Optional, List
 import attr
 import osmnx as ox
-from .stop import Stop
 from .routing import RestrictedGraph
-from .interval import Interval
+from .interval import Stop, Interval
 
 Path = List[int]
 
