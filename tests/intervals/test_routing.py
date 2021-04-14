@@ -102,7 +102,7 @@ class TestCompassDirection:
         (Point(-70.94593, 42.463623), "Washington St @ Munroe St"),
         (Point(-71.171963, 42.271777), "Charles River Loop"),
     ]
-    DIRECTIONS = [88.7, 75.1, 125.4, 153.9]
+    DIRECTIONS = [89, 75, 125, 154]
 
     @pytest.mark.parametrize("origin,dest,compass", zip(ORIGINS, DESTS, DIRECTIONS))
     def test_compass_direction(self, origin, dest, compass):
@@ -115,7 +115,7 @@ class TestCompassDirection:
             setattr(dest, "description", description)
 
         (graph, path) = assert_has_path(origin, dest)
-        assert graph.compass_direction(path) == approx(compass)
+        assert graph.compass_direction(path) == compass
 
 
 class TestRouting:

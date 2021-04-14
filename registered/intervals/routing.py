@@ -217,7 +217,7 @@ class RestrictedGraph:
 
         (second, last) = path[-2:]
         attrs = self.graph.edges[second, last, 0]
-        return attrs["bearing"]
+        return round(attrs["bearing"])
 
     def closest_node(self, point):
         """
