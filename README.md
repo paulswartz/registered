@@ -106,7 +106,7 @@ Print a CSV which shows new/changed stops between two ratings. This step is foun
 $ pipenv run stop_comparison <path to current Rating/Combine> <path to next Rating/Combine>
 ```
 
-## Missing Intervals
+## Missing/Stop Intervals
 
 Writes an HTML file showing calculated distance/direction intervals which are not in the TransitMaster database.
 
@@ -122,5 +122,13 @@ $ pipenv run missing_intervals intervals.html
 ```
 
 And then open `intervals.html` in your browser.
+
+For stop intervals:
+
+```
+$ pipenv run stop_intervals intervals.html 32549
+```
+
+Where the second argument is a stop ID.
 
 [TransitMaster New Rating Procedure]: https://github.com/mbta/wiki/blob/master/transit_tech/Procedures/TransitMaster/TM-03_Make_Updates.md
