@@ -1,7 +1,7 @@
 """
 Render shortest/fastest paths for intervals as HTML.
 """
-from typing import List, Tuple
+from typing import Any, List, Optional, Tuple
 import attr
 import osmnx as ox
 from jinja2 import Template
@@ -159,17 +159,37 @@ class Page:
     def _calculate_results(
         self, calculation: IntervalCalculation
     ) -> List[Tuple[str, str, str]]:
-        named_paths = zip(["Fastest (red)", "Shortest (yellow)"], calculation.paths())
-        if not named_paths:
-            return [("", "0", "NULL")]
-        return [
-            (
-                name,
-                str(self.meters_to_feet(self._graph.path_length(path))),
-                str(self._graph.compass_direction(path)),
+        results = []
+        if calculation.interval.distance_between_measured:
+            results.append(
+                (
+                    "Measured",
+                    str(calculation.interval.distance_between_measured),
+                    null_str(calculation.interval.compass_direction),
+                )
             )
-            for (name, path) in named_paths
-        ]
+        if calculation.interval.distance_between_map:
+            results.append(
+                (
+                    "Map",
+                    str(calculation.interval.distance_between_map),
+                    null_str(calculation.interval.compass_direction),
+                )
+            )
+        named_paths = list(
+            zip(["Fastest (red)", "Shortest (yellow)"], calculation.paths())
+        )
+        for (name, path) in named_paths:
+            results.append(
+                (
+                    name,
+                    str(self.meters_to_feet(self._graph.path_length(path))),
+                    null_str(self._graph.compass_direction(path)),
+                )
+            )
+        if not named_paths:
+            results.append(("Empty", "0", "NULL"))
+        return results
 
     @staticmethod
     def _google_maps_url(from_stop, to_stop):
@@ -225,3 +245,13 @@ class Page:
         return self._template.render(
             this=self, scripts=scripts, stylesheets=stylesheets
         )
+
+
+def null_str(value: Optional[Any]) -> str:
+    """
+    Return NULL if the value is None, otherwise str(value).
+    """
+    if value is None:
+        return "NULL"
+
+    return str(value)
