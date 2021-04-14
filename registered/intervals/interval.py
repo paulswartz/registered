@@ -55,8 +55,8 @@ def optional_int(value: Optional[Union[int, str]]) -> Optional[int]:
     """
     Convert an Optional string/int into an Optional[int].
     """
-    if value is None:
-        return value
+    if value is None or value == "":
+        return None
 
     return int(value)
 
@@ -74,6 +74,9 @@ class Interval:
     from_stop: Stop
     to_stop: Stop
     description: Optional[str] = attr.ib(default=None)
+    distance_between_map: Optional[int] = attr.ib(default=None)
+    distance_between_measured: Optional[int] = attr.ib(default=None)
+    compass_direction: Optional[int] = attr.ib(default=None)
 
     @classmethod
     def from_row(cls, row: dict[str, Any]) -> "Interval":
@@ -97,4 +100,7 @@ class Interval:
             from_stop=from_stop,
             to_stop=to_stop,
             type=IntervalType.optional(row.get("IntervalType")),
+            distance_between_map=optional_int(row.get("DistanceBetweenMap")),
+            distance_between_measured=optional_int(row.get("DistanceBetweenMeasured")),
+            compass_direction=optional_int(row.get("CompassDirection")),
         )
