@@ -31,7 +31,7 @@ class IntervalCalculation:
 
     @property
     def interval_type(self) -> str:
-        return str(self.interval.type).title()
+        return str(self.interval.type.name).title()
 
     @property
     def description(self) -> str:
