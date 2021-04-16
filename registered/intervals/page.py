@@ -75,6 +75,18 @@ class Page:
           <tr>
             <th>From</th>
             <th>To</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{ page.render_stop(this.from_stop) }}</td>
+            <td>{{ page.render_stop(this.to_stop) }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <table>
+        <thead>
+          <tr>
             <th>Interval Type</th>
             <th>Description</th>
             <th>Directions</th>
@@ -82,8 +94,6 @@ class Page:
         </thead>
         <tbody>
           <tr>
-            <td>{{ page.render_stop(this.from_stop) }}</td>
-            <td>{{ page.render_stop(this.to_stop) }}</td>
             <td>{{ this.interval_type}}</td>
             <td>{{ this.description }}</td>
             <td>
@@ -124,7 +134,9 @@ class Page:
     _stop_template = Template(
         """
     {{ this.description }} ({{ this.id }})<br>
-    <a href="{{osm_url | e}}">OpenStreetMap</a>
+    <a href="{{osm_url | e}}">OpenStreetMap</a><br>
+    <a href="https://www.mbta.com/stops/{{ this.id }}">MBTA.com</a><br>
+    <a href="https://api-v3.mbta.com/stops/{{ this.id }}">V3 API</a>
     """
     )
 
