@@ -126,9 +126,7 @@ And then open `intervals.html` in your browser.
 For stop intervals:
 
 ```
-$ pipenv run stop_intervals intervals.html 32549
+$ pipenv run stop_intervals intervals.html --stop-id=32549
 ```
-
-Where the second argument is a stop ID.
 
 [TransitMaster New Rating Procedure]: https://github.com/mbta/wiki/blob/master/transit_tech/Procedures/TransitMaster/TM-03_Make_Updates.md

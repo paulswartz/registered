@@ -4,6 +4,7 @@ Calculate shortest/fastest paths for missing intervals.
 import argparse
 import csv
 from pathlib import Path
+from typing import Any, List
 import osmnx as ox
 from registered import db
 from registered.intervals import query
@@ -13,12 +14,13 @@ from .interval import Interval
 from .calculation import IntervalCalculation, should_ignore_interval
 
 
-def read_database(stop_id):
+def read_database(stop_ids: List[str]) -> List[List[Any]]:
     """
     Read the stop intervals from the TransitMaster DB.
     """
-    where = "gn1.geo_node_abbr = ? or gn2.geo_node_abbr = ?"
-    return query.read_database(where, (stop_id, stop_id))
+    question_marks = ",".join("?" for _ in stop_ids)
+    where = f"gn1.geo_node_abbr IN ({question_marks}) or gn2.geo_node_abbr IN ({question_marks})"
+    return query.read_database(where, stop_ids + stop_ids)
 
 
 def parse_rows(rows, include_ignored=False):
@@ -62,7 +64,12 @@ def main(argv):
         rows = list(csv.DictReader(argv.input_csv.open()))
     else:
         ox.utils.log("Reading from TransitMaster database...")
-        rows = read_database(argv.stop_id)
+        stop_ids = []
+        if argv.stop_id:
+            stop_ids += argv.stop_id
+        if argv.stop_id_csv:
+            stop_ids += (row[0] for row in csv.reader(argv.stop_id_csv.open()))
+        rows = read_database(stop_ids)
         if argv.output_csv:
             with argv.output_csv.open("w") as out_io:
                 headers = rows[0].keys()
@@ -84,7 +91,15 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "html", metavar="HTML", help="path to HTML file to output", type=Path
 )
-parser.add_argument("stop_id", metavar="STOP_ID", help="Stop ID to find intervals for")
+parser.add_argument(
+    "--stop-id",
+    metavar="STOP_ID",
+    help="Stop ID to find intervals for",
+    action="append",
+)
+parser.add_argument(
+    "--stop-id-csv", metavar="CSV", help="CSVs with stop IDs in first column", type=Path
+)
 
 parser.add_argument(
     "--input-csv", type=Path, help="CSV file to use as an input instead of the database"
