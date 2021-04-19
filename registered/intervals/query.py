@@ -43,7 +43,9 @@ select
 	gn2.geo_node_name AS ToStopDescription,
 	gn2.mdt_latitude/10000000 as ToStopLatitude,
 	gn2.mdt_longitude/10000000 as ToStopLongitude,
-	min(RTRIM(r.route_abbr) + '-' + RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription,
+	MIN(RTRIM(r.route_abbr)) as Route,
+        MIN(RTRIM(rd.route_direction_name)) as Direction,
+        MIN(RTRIM(p.pattern_abbr)) as Pattern,
     gni.DISTANCE_BETWEEN_MAP as DistanceBetweenMap,
     gni.DISTANCE_BETWEEN_MEASURED as DistanceBetweenMeasured,
     gni.COMPASS_DIRECTION as CompassDirection,
@@ -92,7 +94,9 @@ select
 	gn2.geo_node_name AS ToStopDescription,
 	gn2.mdt_latitude/10000000 as ToStopLatitude,
 	gn2.mdt_longitude/10000000 as ToStopLongitude,
-	MIN(RTRIM(r.route_abbr) + '-' + RTRIM(rd.route_direction_name) + '-' + RTRIM(p.pattern_abbr)) AS IntervalDescription,
+	MIN(RTRIM(r.route_abbr)) as Route,
+        MIN(RTRIM(rd.route_direction_name)) as Direction,
+        MIN(RTRIM(p.pattern_abbr)) as Pattern,
     gni.DISTANCE_BETWEEN_MAP as DistanceBetweenMap,
     gni.DISTANCE_BETWEEN_MEASURED as DistanceBetweenMeasured,
     gni.COMPASS_DIRECTION as CompassDirection,
@@ -131,7 +135,9 @@ group by
 	gn2.mdt_longitude
 order by
 	IntervalType,
-	IntervalDescription;
+	Route,
+    Direction,
+    Pattern;
 """
 
 

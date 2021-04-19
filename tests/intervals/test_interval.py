@@ -49,7 +49,9 @@ class TestInterval:
             to_stop=Stop(
                 (-70.99205, 42.413385), id="15795", description="Wonderland Busway"
             ),
-            description="116-Outbound-116-4",
+            route="116",
+            direction="Outbound",
+            pattern="116-4",
         )
         actual = Interval.from_row(row)
         assert expected == actual

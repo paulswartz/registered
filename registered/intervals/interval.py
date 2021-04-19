@@ -73,10 +73,21 @@ class Interval:
     )
     from_stop: Stop
     to_stop: Stop
-    description: Optional[str] = attr.ib(default=None)
+    route: Optional[str] = attr.ib(default=None)
+    direction: Optional[str] = attr.ib(default=None)
+    pattern: Optional[str] = attr.ib(default=None)
     distance_between_map: Optional[int] = attr.ib(default=None)
     distance_between_measured: Optional[int] = attr.ib(default=None)
     compass_direction: Optional[int] = attr.ib(default=None)
+
+    @property
+    def description(self) -> Optional[str]:
+        """
+        Backwards-compatibility to generate a description from the route/direction/pattern.
+        """
+        if self.route is None and self.direction is None and self.pattern is None:
+            return None
+        return f"{self.route}-{self.direction}-{self.pattern}"
 
     @classmethod
     def from_row(cls, row: dict[str, Any]) -> "Interval":
@@ -94,11 +105,21 @@ class Interval:
             description=row["ToStopDescription"],
         )
 
+        description = row.get("IntervalDescription")
+        if description is not None:
+            (route, direction, pattern) = description.split("-", 2)
+        else:
+            route = row.get("Route")
+            direction = row.get("Direction")
+            pattern = row.get("Pattern")
+
         return cls(
             id=optional_int(row.get("IntervalId")),
-            description=row.get("IntervalDescription"),
             from_stop=from_stop,
             to_stop=to_stop,
+            route=route,
+            direction=direction,
+            pattern=pattern,
             type=IntervalType.optional(row.get("IntervalType")),
             distance_between_map=optional_int(row.get("DistanceBetweenMap")),
             distance_between_measured=optional_int(row.get("DistanceBetweenMeasured")),
