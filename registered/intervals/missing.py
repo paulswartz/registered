@@ -33,7 +33,7 @@ def parse_rows(rows, include_ignored=False):
     Parse the given list of rows into a Page.
     """
     row_count = len(rows)
-    intervals = [Interval.from_row(row) for row in rows]
+    intervals = sorted(Interval.from_row(row) for row in rows)
 
     if not include_ignored:
         intervals = [

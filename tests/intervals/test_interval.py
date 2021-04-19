@@ -1,3 +1,4 @@
+import random
 from shapely.geometry import Point
 from registered.intervals.interval import Stop, Interval, IntervalType
 
@@ -54,4 +55,21 @@ class TestInterval:
             pattern="116-4",
         )
         actual = Interval.from_row(row)
+        assert expected == actual
+
+    def test_sort_by_pattern_direction(self):
+        stop = Stop((0, 0), id="zero")
+        one = Interval(
+            from_stop=stop, to_stop=stop, pattern="116-4", direction="Inbound"
+        )
+        two = Interval(
+            from_stop=stop, to_stop=stop, pattern="116-4", direction="Outbound"
+        )
+        three = Interval(
+            from_stop=stop, to_stop=stop, pattern="117-2", direction="Inbound"
+        )
+        shuffled = random.sample([one, two, three], 3)
+
+        expected = [one, two, three]
+        actual = list(sorted(shuffled))
         assert expected == actual

@@ -2,6 +2,7 @@
 Generic representation of an interval in TransitMaster.
 """
 from enum import IntEnum
+from functools import total_ordering
 from typing import Any, Optional, Tuple, Union
 import attr
 from shapely.geometry import Point
@@ -61,6 +62,7 @@ def optional_int(value: Optional[Union[int, str]]) -> Optional[int]:
     return int(value)
 
 
+@total_ordering
 @attr.define(kw_only=True)
 class Interval:
     """
@@ -79,6 +81,19 @@ class Interval:
     distance_between_map: Optional[int] = attr.ib(default=None)
     distance_between_measured: Optional[int] = attr.ib(default=None)
     compass_direction: Optional[int] = attr.ib(default=None)
+
+    def __lt__(self, other):
+        """
+        Returns True if this interval has a lower pattern/direction compared to `other`.
+        """
+        if isinstance(other, Interval):
+            return (self.pattern, self.direction, self.id) < (
+                other.pattern,
+                other.direction,
+                other.id,
+            )
+
+        return NotImplemented
 
     @property
     def description(self) -> Optional[str]:
