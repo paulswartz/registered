@@ -30,11 +30,6 @@ def parse_rows(rows, include_ignored=False):
     row_count = len(rows)
     intervals = sorted(Interval.from_row(row) for row in rows)
 
-    if not include_ignored:
-        intervals = [
-            interval for interval in intervals if not should_ignore_interval(interval)
-        ]
-
     if not intervals:
         ox.utils.log("No intervals to process.")
         return None

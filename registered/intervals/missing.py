@@ -4,13 +4,49 @@ Calculate shortest/fastest paths for missing intervals.
 import argparse
 import csv
 from pathlib import Path
+import re
 import osmnx as ox
 from registered import db
 from registered.intervals import query
 from .page import Page
 from .routing import RestrictedGraph, configure_osmnx
 from .interval import Interval
-from .calculation import IntervalCalculation, should_ignore_interval
+from .calculation import IntervalCalculation
+
+
+IGNORE_RE = re.compile(r"\d|Inbound|Outbound")
+IGNORED_PAIRS = {
+    ("4191", "4277"),  # N Main St opp Short St to N Main St opp Memorial Pkwy
+    (
+        "73619",
+        "89617",
+    ),  # 205 Washington St @ East Walpole Loop to 238 Washington St opp May St
+    (
+        "109898",
+        "109821",
+    ),  # Shirley St @ Washington Ave to Veterans Rd @ Washington Ave
+    ("censq", "16653"),  # Lynn New Busway to Market St @ Commuter Rail
+    ("14748", "censq"),  # Lynn Commuter Rail Busway to Lynn New Busway
+    ("fell", "5333"),  # Fellsway Garage to Salem St @ Fellsway Garage
+    ("ncamb", "12295"),  # North Cambridge trackless to North Cambridge Carhouse
+    ("12295", "ncamb"),  # North Cambridge Carhouse to North Cambridge trackless
+}
+
+
+def should_ignore_interval(interval: Interval) -> bool:
+    """
+    Return True if we should ignore that the given interval is missing.
+
+    - If the interval is a REVENUE interval (these can be easily calculated in TransitMaster)
+    - If the descriptions are the same, except for digits (Busway Berth 1 to Busway Berth 2)
+    - If the descriptions are the same, except for Inbound/Outbound
+    - If the stops are in one of a few specifically ignored pairs of stops
+    """
+    from_stop = interval.from_stop
+    to_stop = interval.to_stop
+    return (from_stop.id, to_stop.id) in IGNORED_PAIRS or IGNORE_RE.sub(
+        "", from_stop.description
+    ) == IGNORE_RE.sub("", to_stop.description)
 
 
 def read_database():
