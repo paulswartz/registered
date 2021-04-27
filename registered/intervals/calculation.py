@@ -6,7 +6,7 @@ from typing import Optional, List
 import attr
 import osmnx as ox
 from .routing import RestrictedGraph
-from .interval import Stop, Interval
+from .interval import Stop, Interval, IntervalType
 
 Path = List[int]
 
@@ -45,7 +45,7 @@ class IntervalCalculation:
         Create an interval given the from/to stops.
         """
         fastest_path = shortest_path = None
-        if not should_ignore_interval(interval):
+        if should_calculate(interval):
             ox.utils.log(
                 f"calculating interval from {interval.from_stop} to {interval.to_stop}"
             )
@@ -73,35 +73,10 @@ class IntervalCalculation:
         ]
 
 
-IGNORE_RE = re.compile(r"\d|Inbound|Outbound")
-IGNORED_PAIRS = {
-    ("4191", "4277"),  # N Main St opp Short St to N Main St opp Memorial Pkwy
-    (
-        "73619",
-        "89617",
-    ),  # 205 Washington St @ East Walpole Loop to 238 Washington St opp May St
-    (
-        "109898",
-        "109821",
-    ),  # Shirley St @ Washington Ave to Veterans Rd @ Washington Ave
-    ("censq", "16653"),  # Lynn New Busway to Market St @ Commuter Rail
-    ("14748", "censq"),  # Lynn Commuter Rail Busway to Lynn New Busway
-    ("fell", "5333"),  # Fellsway Garage to Salem St @ Fellsway Garage
-    ("ncamb", "12295"),  # North Cambridge trackless to North Cambridge Carhouse
-    ("12295", "ncamb"),  # North Cambridge Carhouse to North Cambridge trackless
-}
-
-
-def should_ignore_interval(interval: Interval) -> bool:
+def should_calculate(interval: Interval) -> bool:
     """
-    Return True if we should ignore the given interval.
+    Return True if we should calculate a path for the given Interval.
 
-    - If the descriptions are the same, except for digits (Busway Berth 1 to Busway Berth 2)
-    - If the descriptions are the same, except for Inbound/Outbound
-    - If the stops are in one of a few specifically ignored pairs of stops
+    - do not calculate Revenue intervals
     """
-    from_stop = interval.from_stop
-    to_stop = interval.to_stop
-    return (from_stop.id, to_stop.id) in IGNORED_PAIRS or IGNORE_RE.sub(
-        "", from_stop.description
-    ) == IGNORE_RE.sub("", to_stop.description)
+    return interval.type != IntervalType.REVENUE

@@ -1,26 +1,24 @@
 from shapely.geometry import Point
-from registered.intervals.interval import Stop, Interval
-from registered.intervals.calculation import should_ignore_interval
+from registered.intervals.routing import RestrictedGraph
+from registered.intervals.interval import Stop, Interval, IntervalType
+from registered.intervals.calculation import IntervalCalculation
 
 
-def test_should_ignore_interval():
-    point = Point(0, 0)
-    sullivan_1 = Stop(
-        point, id="29001", description="Sullivan Station Busway - Berth 1"
-    )
-    sullivan_2 = Stop(
-        point, id="20002", description="Sullivan Station Busway - Berth 2"
-    )
-    fields_corner = Stop(point, id="323", description="Fields Corner Busway")
-    chelsea_inbound = Stop(point, id="74630", description="Chelsea - Inbound")
-    chelsea_outbound = Stop(point, id="74631", description="Chelsea - Outbound")
-
-    assert should_ignore_interval(Interval(from_stop=sullivan_1, to_stop=sullivan_1))
-    assert should_ignore_interval(Interval(from_stop=sullivan_1, to_stop=sullivan_2))
-    assert (
-        should_ignore_interval(Interval(from_stop=sullivan_1, to_stop=fields_corner))
-        is False
-    )
-    assert should_ignore_interval(
-        Interval(from_stop=chelsea_inbound, to_stop=chelsea_outbound)
-    )
+class TestIntervalCalculation:
+    def test_does_not_calculate_revenue_interval(self):
+        nubian_station = Stop(
+            Point(-70.99272, 42.418574),
+            id="5774",
+            description="Revere St @ Sagamore St",
+        )
+        washington_st = Stop(
+            Point(-70.99205, 42.413385),
+            id="15795",
+            description="Wonderland Busway",
+        )
+        interval = Interval(
+            type=IntervalType.REVENUE, from_stop=nubian_station, to_stop=washington_st
+        )
+        graph = RestrictedGraph.from_points([nubian_station, washington_st])
+        calculation = IntervalCalculation.calculate(interval, graph)
+        assert calculation.paths() == []
