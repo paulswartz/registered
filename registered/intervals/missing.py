@@ -5,13 +5,9 @@ import argparse
 import csv
 from pathlib import Path
 import re
-import osmnx as ox
-from registered import db
 from registered.intervals import query
-from .page import Page
-from .routing import RestrictedGraph, configure_osmnx
 from .interval import Interval
-from .calculation import IntervalCalculation
+from .cli import page_from_rows, enable_logging, log
 
 
 IGNORE_RE = re.compile(r"\d|Inbound|Outbound")
@@ -49,67 +45,56 @@ def should_ignore_interval(interval: Interval) -> bool:
     ) == IGNORE_RE.sub("", to_stop.description)
 
 
+WHERE = """
+(gni.distance_between_measured = 0
+  OR gni.distance_between_measured IS NULL)
+AND
+(gni.distance_between_map = 0
+  OR gni.distance_between_map IS NULL)
+    """
+
+
 def read_database():
     """
     Read the missing intervals from the TransitMaster DB.
     """
-    distance = 0
-    where = """
-(gni.distance_between_measured = ?
-  OR gni.distance_between_measured IS NULL)
-AND
-(gni.distance_between_map = ?
-  OR gni.distance_between_map IS NULL)
+    return query.read_database(WHERE)
+
+
+def parse_rows(rows: list[str], include_ignored: bool = False):
     """
-    return query.read_database(where, (distance, distance))
+    Parse the list of rows into a Page.
 
-
-def parse_rows(rows, include_ignored=False):
+    If include_ignored is True, don't filter out ignored intervals.
     """
-    Parse the given list of rows into a Page.
-    """
-    row_count = len(rows)
-    intervals = sorted(Interval.from_row(row) for row in rows)
+    if include_ignored:
+        interval_filter = None
+    else:
 
-    if not include_ignored:
-        intervals = [
-            interval for interval in intervals if not should_ignore_interval(interval)
-        ]
+        def interval_filter(interval: Interval) -> bool:
+            """
+            Only keep non-ignored intervals.
+            """
+            return not should_ignore_interval(interval)
 
-    if not intervals:
-        ox.utils.log("No intervals to process.")
-        return None
-
-    (from_stops, to_stops) = zip(
-        *((interval.from_stop, interval.to_stop) for interval in intervals)
-    )
-    graph = RestrictedGraph.from_points(from_stops + to_stops)
-
-    page = Page(graph=graph)
-
-    for (index, interval) in enumerate(intervals, 1):
-        ox.utils.log(f"processing row {index} of {row_count}: {interval!r}")
-        calc = IntervalCalculation.calculate(interval=interval, graph=graph)
-        page.add(calc)
-
-    return page
+    return page_from_rows(rows, interval_filter=interval_filter)
 
 
 def main(argv):
     """
     Entrypoint for the Missing Intervals Calculation.
     """
-    configure_osmnx(log_console=True)
+    enable_logging()
     if argv.input_csv:
-        ox.utils.log(f"Reading from {argv.input_csv}...")
+        log(f"Reading from {argv.input_csv}...")
         rows = list(csv.DictReader(argv.input_csv.open()))
     else:
-        ox.utils.log("Reading from TransitMaster database...")
+        log("Reading from TransitMaster database...")
         rows = read_database()
         if argv.output_csv:
             with argv.output_csv.open("w") as out_io:
                 headers = rows[0].keys()
-                ox.utils.log(f"Writing {len(rows)} to {argv.output_csv}...")
+                log(f"Writing {len(rows)} to {argv.output_csv}...")
                 writer = csv.DictWriter(out_io, headers)
                 writer.writeheader()
                 writer.writerows(rows)
@@ -117,7 +102,7 @@ def main(argv):
     page = parse_rows(rows, include_ignored=argv.include_ignored)
     if page:
         with argv.html.open("w") as out_io:
-            ox.utils.log(f"Writing HTML to {argv.html}...")
+            log(f"Writing HTML to {argv.html}...")
             out_io.write(page.render())
 
 

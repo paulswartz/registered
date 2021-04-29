@@ -37,13 +37,15 @@ class TestInterval:
             "ToStopDescription": "Wonderland Busway",
             "ToStopLatitude": "42.413385",
             "ToStopLongitude": "-70.99205",
-            "IntervalDescription": "116-Outbound-116-4",
+            "Route": "116",
+            "Direction": "Outbound",
+            "Pattern": "116-4",
         }
         expected = Interval(
             id=1234,
             type=IntervalType.REVENUE,
             from_stop=Stop(
-                (-70.992792, 42.418574),
+                (-70.99272, 42.418574),
                 id="5774",
                 description="Revere St @ Sagamore St",
             ),

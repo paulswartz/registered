@@ -8,25 +8,34 @@ import attr
 from shapely.geometry import Point
 
 
-@attr.define(repr=False)
 class Stop(Point):
     """
     A location at one end of an interval (either start or end).
     """
 
-    # pylint: disable=too-few-public-methods
-    _point: Union[Point, Tuple[Union[float, str]]]
-    id: str = attr.ib(kw_only=True)
-    description: Optional[str] = attr.ib(default=None, kw_only=True)
+    # pylint: disable=too-few-public-methods,invalid-name,redefined-builtin
+    def __init__(
+        self,
+        point: Union[Point, Tuple[Union[float, str]]],
+        id: str = None,
+        description: Optional[str] = None,
+    ):
+        if not isinstance(point, Point):
+            point = Point([float(val) for val in point])
+        if id is None:
+            raise ValueError("id is required")
+        Point.__init__(self, point)
+        self.id = id
+        self.description = description
 
-    def __attrs_post_init__(self):
-        if not isinstance(self._point, Point):
-            self._point = Point([float(val) for val in self._point])
-        Point.__init__(self, self._point)
-        self._point = None
+    def __str__(self):
+        return repr(self)
 
     def __repr__(self):
-        return f"Stop(Point({self.x!r}, {self.y!r}), id={self.id!r}, description={self.description!r})"
+        return (
+            f"Stop(Point({self.x!r}, {self.y!r}), "
+            f"id={self.id!r}, description={self.description!r})"
+        )
 
 
 class IntervalType(IntEnum):

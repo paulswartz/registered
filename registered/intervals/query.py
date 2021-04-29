@@ -141,8 +141,8 @@ def sql(
     If provided, parameters are returned duplicated, to account for the face that the WHERE clause
     is also duplicated.
     """
-    sql = SQL.format(where=where)
+    formatted = SQL.format(where=where)
     if parameters is None:
-        return sql
+        return formatted
 
-    return (sql, parameters + parameters)
+    return (formatted, parameters + parameters)

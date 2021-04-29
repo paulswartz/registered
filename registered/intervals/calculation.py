@@ -1,7 +1,6 @@
 """
 Calculation of a fastest/shortest path for a given Interval.
 """
-import re
 from typing import Optional, List
 import attr
 import osmnx as ox
@@ -23,18 +22,22 @@ class IntervalCalculation:
 
     @property
     def from_stop(self) -> Stop:
+        "Return the from_stop of the Interval."
         return self.interval.from_stop
 
     @property
     def to_stop(self) -> Stop:
+        "Return the to_stop of the Interval."
         return self.interval.to_stop
 
     @property
     def interval_type(self) -> str:
+        "Return the formatted type of the Interval: Revenue, Deadhead, &c."
         return str(self.interval.type.name).title()
 
     @property
     def description(self) -> str:
+        "Return the description of the Interval."
         return self.interval.description or ""
 
     @classmethod
@@ -42,7 +45,7 @@ class IntervalCalculation:
         cls, interval: Interval, graph: RestrictedGraph
     ) -> "IntervalCalculation":
         """
-        Create an interval given the from/to stops.
+        Calculate the fastest/shortest paths, given an Interval.
         """
         fastest_path = shortest_path = None
         if should_calculate(interval):
