@@ -86,36 +86,6 @@ def test_short_path():
     graph = routing.RestrictedGraph.from_points([point])
     path = graph.shortest_path(Point(0, 0), Point(0, 0))
     assert len(path) == 1
-    assert graph.compass_direction(path) == None
-
-
-class TestCompassDirection:
-    ORIGINS = [
-        (Point(-71.03991910663855, 42.33306759993236), None),
-        (Point(-71.040217, 42.317071), None),
-        (Point(-70.943385, 42.465441), None),
-        (Point(-71.170956, 42.272991), None),
-    ]
-    DESTS = [
-        (Point(-71.03599235273778, 42.335613467448354), None),
-        (Point(-71.064371, 42.308101), "St Peters Sq @ Church"),
-        (Point(-70.94593, 42.463623), "Washington St @ Munroe St"),
-        (Point(-71.171963, 42.271777), "Charles River Loop"),
-    ]
-    DIRECTIONS = [89, 75, 125, 154]
-
-    @pytest.mark.parametrize("origin,dest,compass", zip(ORIGINS, DESTS, DIRECTIONS))
-    def test_compass_direction(self, origin, dest, compass):
-        (origin, description) = origin
-        if description is not None:
-            setattr(origin, "description", description)
-
-        (dest, description) = dest
-        if description is not None:
-            setattr(dest, "description", description)
-
-        (graph, path) = assert_has_path(origin, dest)
-        assert graph.compass_direction(path) == compass
 
 
 class TestRouting:

@@ -50,7 +50,6 @@ SELECT
   MIN(RTRIM(p.pattern_abbr)) AS Pattern,
   gni.distance_between_map AS DistanceBetweenMap,
   gni.distance_between_measured AS DistanceBetweenMeasured,
-  gni.compass_direction AS CompassDirection,
   CAST(gni.use_map AS int) AS UseMap
 FROM pattern_geo_interval_xref pgix
 INNER JOIN pattern p
@@ -70,7 +69,6 @@ AND ({where})
 GROUP BY gni.interval_id,
          gni.distance_between_map,
          gni.distance_between_measured,
-         gni.compass_direction,
          gni.use_map,
          gn1.geo_node_abbr,
          gn1.geo_node_name,
@@ -98,7 +96,6 @@ SELECT
   MIN(RTRIM(p.pattern_abbr)) AS Pattern,
   gni.distance_between_map AS DistanceBetweenMap,
   gni.distance_between_measured AS DistanceBetweenMeasured,
-  gni.compass_direction AS CompassDirection,
   CAST(gni.use_map AS int) AS UseMap
 FROM deadheads dh
 INNER JOIN pattern p
@@ -118,7 +115,6 @@ AND ({where})
 GROUP BY gni.interval_id,
          gni.distance_between_map,
          gni.distance_between_measured,
-         gni.compass_direction,
          gni.use_map,
          dh.dh_type,
          gn1.geo_node_abbr,

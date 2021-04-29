@@ -80,7 +80,6 @@ class Interval:
     pattern: Optional[str] = attr.ib(default=None)
     distance_between_map: Optional[int] = attr.ib(default=None)
     distance_between_measured: Optional[int] = attr.ib(default=None)
-    compass_direction: Optional[int] = attr.ib(default=None)
 
     def __lt__(self, other):
         """
@@ -138,5 +137,4 @@ class Interval:
             type=IntervalType.optional(row.get("IntervalType")),
             distance_between_map=optional_int(row.get("DistanceBetweenMap")),
             distance_between_measured=optional_int(row.get("DistanceBetweenMeasured")),
-            compass_direction=optional_int(row.get("CompassDirection")),
         )

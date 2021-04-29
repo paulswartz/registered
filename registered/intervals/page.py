@@ -110,7 +110,6 @@ class Page:
           <tr>
             <th>Route</th>
             <th>Length (ft)</th>
-            <th>Compass Direction</th>
           </tr>
         </thead>
         <tbody>
@@ -177,7 +176,6 @@ class Page:
                 (
                     "Measured",
                     str(calculation.interval.distance_between_measured),
-                    null_str(calculation.interval.compass_direction),
                 )
             )
         if calculation.interval.distance_between_map:
@@ -185,7 +183,6 @@ class Page:
                 (
                     "Map",
                     str(calculation.interval.distance_between_map),
-                    null_str(calculation.interval.compass_direction),
                 )
             )
         named_paths = list(
@@ -196,11 +193,10 @@ class Page:
                 (
                     name,
                     str(self.meters_to_feet(self._graph.path_length(path))),
-                    null_str(self._graph.compass_direction(path)),
                 )
             )
         if not named_paths:
-            results.append(("Empty", "0", "NULL"))
+            results.append(("Empty", "0"))
         return results
 
     @staticmethod

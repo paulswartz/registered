@@ -204,21 +204,6 @@ class RestrictedGraph:
 
         return path
 
-    def compass_direction(self, path):
-        """
-        Return the compass direction the path takes at the end.
-
-        North = 0, East = 90, South = 180, West = 270
-
-        None if the direction is unknown (path is only a single node).
-        """
-        if len(path) < 2:
-            return None
-
-        (second, last) = path[-2:]
-        attrs = self.graph.edges[second, last, 0]
-        return round(attrs["bearing"])
-
     def closest_node(self, point):
         """
         Return the ID of the closest node to the given Point.
