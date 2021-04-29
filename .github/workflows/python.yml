@@ -29,4 +29,15 @@ jobs:
     - name: Linting
       run: pipenv run lint
     - name: Run tests
-      run: pipenv run test -v --cov=registered --cov-fail-under=74
+      run: pipenv run test -v --cov=registered --cov-fail-under=74 --cov-report=term --cov-report=html
+    - name: Check if coverage was reported
+      id: has-coverage
+      if: ${{ always() }}
+      run: |
+        test -d htmlcov && echo "::set-output name=exists::true"
+    - name: Upload coverage artifact
+      if: ${{ always() && steps.has-coverage.outputs.exists }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: python-coverage-report
+        path: htmlcov/
