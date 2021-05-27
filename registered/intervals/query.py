@@ -39,12 +39,24 @@ SELECT
   0 AS IntervalType,
   gn1.geo_node_abbr AS FromStopNumber,
   gn1.geo_node_name AS FromStopDescription,
-  gn1.mdt_latitude / 10000000 AS FromStopLatitude,
-  gn1.mdt_longitude / 10000000 AS FromStopLongitude,
+  (CASE
+        WHEN gn1.use_survey = 1 THEN gn1.latitude
+        ELSE gn1.map_latitude END) / 10000000
+  as FromStopLatitude,
+  (CASE
+        WHEN gn1.use_survey = 1 THEN gn1.longitude
+        ELSE gn1.map_longitude END) / 10000000
+  as FromStopLongitude,
   gn2.geo_node_abbr AS ToStopNumber,
   gn2.geo_node_name AS ToStopDescription,
-  gn2.mdt_latitude / 10000000 AS ToStopLatitude,
-  gn2.mdt_longitude / 10000000 AS ToStopLongitude,
+  (CASE
+        WHEN gn2.use_survey = 1 THEN gn2.latitude
+        ELSE gn2.map_latitude END) / 10000000
+  as ToStopLatitude,
+  (CASE
+        WHEN gn2.use_survey = 1 THEN gn2.longitude
+        ELSE gn2.map_longitude END) / 10000000
+  as ToStopLongitude,
   MIN(RTRIM(r.route_abbr)) AS Route,
   MIN(RTRIM(rd.route_direction_name)) AS Direction,
   MIN(RTRIM(p.pattern_abbr)) AS Pattern,
@@ -72,12 +84,18 @@ GROUP BY gni.interval_id,
          gni.use_map,
          gn1.geo_node_abbr,
          gn1.geo_node_name,
-         gn1.mdt_latitude,
-         gn1.mdt_longitude,
+         gn1.use_survey,
+         gn1.latitude,
+         gn1.map_latitude,
+         gn1.longitude,
+         gn1.map_longitude,
          gn2.geo_node_abbr,
          gn2.geo_node_name,
-         gn2.mdt_latitude,
-         gn2.mdt_longitude
+         gn2.use_survey,
+         gn2.latitude,
+         gn2.map_latitude,
+         gn2.longitude,
+         gn2.map_longitude
 UNION
 SELECT
   @ttvid + 0.2 AS RouteVersionId,
@@ -85,12 +103,24 @@ SELECT
   dh.dh_type AS IntervalType,
   gn1.geo_node_abbr AS FromStopNumber,
   gn1.geo_node_name AS FromStopDescription,
-  gn1.mdt_latitude / 10000000 AS FromStopLatitude,
-  gn1.mdt_longitude / 10000000 AS FromStopLongitude,
+  (CASE
+        WHEN gn1.use_survey = 1 THEN gn1.latitude
+        ELSE gn1.map_latitude END) / 10000000
+  as FromStopLatitude,
+  (CASE
+        WHEN gn1.use_survey = 1 THEN gn1.longitude
+        ELSE gn1.map_longitude END) / 10000000
+  as FromStopLongitude,
   gn2.geo_node_abbr AS ToStopNumber,
   gn2.geo_node_name AS ToStopDescription,
-  gn2.mdt_latitude / 10000000 AS ToStopLatitude,
-  gn2.mdt_longitude / 10000000 AS ToStopLongitude,
+  (CASE
+        WHEN gn2.use_survey = 1 THEN gn2.latitude
+        ELSE gn2.map_latitude END) / 10000000
+  as ToStopLatitude,
+  (CASE
+        WHEN gn2.use_survey = 1 THEN gn2.longitude
+        ELSE gn2.map_longitude END) / 10000000
+  as ToStopLongitude,
   MIN(RTRIM(r.route_abbr)) AS Route,
   MIN(RTRIM(rd.route_direction_name)) AS Direction,
   MIN(RTRIM(p.pattern_abbr)) AS Pattern,
@@ -119,12 +149,18 @@ GROUP BY gni.interval_id,
          dh.dh_type,
          gn1.geo_node_abbr,
          gn1.geo_node_name,
-         gn1.mdt_latitude,
-         gn1.mdt_longitude,
+         gn1.use_survey,
+         gn1.latitude,
+         gn1.map_latitude,
+         gn1.longitude,
+         gn1.map_longitude,
          gn2.geo_node_abbr,
          gn2.geo_node_name,
-         gn2.mdt_latitude,
-         gn2.mdt_longitude
+         gn2.use_survey,
+         gn2.latitude,
+         gn2.map_latitude,
+         gn2.longitude,
+         gn2.map_longitude
 ORDER BY IntervalType,
 Route,
 Direction,
