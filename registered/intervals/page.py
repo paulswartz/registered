@@ -97,10 +97,12 @@ class Page:
             <td>{{ this.interval_type}}</td>
             <td>{{ this.description }}</td>
             <td>
+              {% if has_maps %}
               <a target="_blank"
                  href="{{ google_maps_url | e}}">Google Maps</a><br>
               <a target="_blank"
                  href="{{ osm_url | e}}">OpenStreetMap</a><br>
+              {% endif %}
             </td>
           </tr>
         </tbody>
@@ -133,7 +135,7 @@ class Page:
     _stop_template = Template(
         """
     {{ this.description }} ({{ this.id }})<br>
-    <a href="{{osm_url | e}}">OpenStreetMap</a><br>
+    {% if osm_url %}<a href="{{osm_url | e}}">OpenStreetMap</a><br>{% endif %}
     <a href="https://www.mbta.com/stops/{{ this.id }}">MBTA.com</a><br>
     <a href="https://api-v3.mbta.com/stops/{{ this.id }}">V3 API</a>
     """
@@ -143,19 +145,24 @@ class Page:
         """
         Render the calculation as HTML.
         """
-        google_maps_url = self._google_maps_url(
-            calculation.from_stop, calculation.to_stop
-        )
-        osm_url = self._osm_url(calculation.from_stop, calculation.to_stop)
+        print(calculation)
         results = self._calculate_results(calculation)
-        folium_map = self._graph.folium_map(
-            calculation.from_stop, calculation.to_stop, calculation.paths()
-        )
 
-        folium_map.render()
-        map_root = folium_map.get_root()
-        folium_map_html = map_root.html.render()
-        folium_map_script = map_root.script.render()
+        has_maps = calculation.is_located()
+        if has_maps:
+            google_maps_url = self._google_maps_url(
+                calculation.from_stop, calculation.to_stop
+            )
+            osm_url = self._osm_url(calculation.from_stop, calculation.to_stop)
+            folium_map = self._graph.folium_map(
+                calculation.from_stop, calculation.to_stop, calculation.paths()
+            )
+            folium_map.render()
+            map_root = folium_map.get_root()
+            folium_map_html = map_root.html.render()
+            folium_map_script = map_root.script.render()
+        else:
+            google_maps_url = osm_url = folium_map_html = folium_map_script = None
 
         return self._calculation_template.render(
             page=self,
@@ -220,11 +227,14 @@ class Page:
         """
         Render a stop to HTML.
         """
-        osm_url = (
-            f"https://www.openstreetmap.org/query?"
-            f"lat={stop.y}&lon={stop.x}"
-            f"#map=18/{stop.y}/{stop.x}"
-        )
+        if hasattr(stop, "x") and hasattr(stop, "y"):
+            osm_url = (
+                f"https://www.openstreetmap.org/query?"
+                f"lat={stop.y}&lon={stop.x}"
+                f"#map=18/{stop.y}/{stop.x}"
+            )
+        else:
+            osm_url = None
         return cls._stop_template.render(this=stop, osm_url=osm_url)
 
     @staticmethod

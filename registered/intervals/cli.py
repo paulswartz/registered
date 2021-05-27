@@ -45,14 +45,18 @@ def page_from_intervals(intervals: list[Interval]) -> Optional[Page]:
 
     If there are no intervals, return None.
     """
-    if not intervals:
-        ox.utils.log("No intervals to process.")
+    if not any(True for interval in intervals if interval.is_located()):
+        ox.utils.log("No intervals with locations to process.")
         return None
 
     row_count = len(intervals)
 
     (from_stops, to_stops) = zip(
-        *((interval.from_stop, interval.to_stop) for interval in intervals)
+        *(
+            (interval.from_stop, interval.to_stop)
+            for interval in intervals
+            if interval.is_located()
+        )
     )
     graph = RestrictedGraph.from_points(from_stops + to_stops)
 

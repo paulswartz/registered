@@ -40,6 +40,30 @@ class Stop(Point):
             f"id={self.id!r}, description={self.description!r})"
         )
 
+    @staticmethod
+    def from_row(
+        lat_str: str, lon_str: str, id: str, description: str
+    ) -> Union["Stop", "StopWithoutLocation"]:
+        """
+        Try to parse a Stop, and return either a Stop or a StopWithoutLocation.
+        """
+        try:
+            return Stop((lat_str, lon_str), id=id, description=description)
+        except ValueError:
+            return StopWithoutLocation(id=id, description=description)
+
+
+@attr.define
+class StopWithoutLocation:
+    """
+    Represents a stop for which we don't have a location.
+    """
+
+    # pylint: disable=too-few-public-methods
+
+    id: str
+    description: Optional[str] = attr.ib(default=None)
+
 
 class IntervalType(IntEnum):
     """
@@ -85,13 +109,19 @@ class Interval:
     type: Optional[IntervalType] = attr.ib(
         default=None, converter=IntervalType.optional
     )
-    from_stop: Stop
-    to_stop: Stop
+    from_stop: Union[Stop, StopWithoutLocation]
+    to_stop: Union[Stop, StopWithoutLocation]
     route: Optional[str] = attr.ib(default=None)
     direction: Optional[str] = attr.ib(default=None)
     pattern: Optional[str] = attr.ib(default=None)
     distance_between_map: Optional[int] = attr.ib(default=None)
     distance_between_measured: Optional[int] = attr.ib(default=None)
+
+    def is_located(self):
+        """
+        True if both from_stop and to_stop have a location.
+        """
+        return isinstance(self.from_stop, Stop) and isinstance(self.to_stop, Stop)
 
     def __lt__(self, other):
         """
@@ -120,15 +150,17 @@ class Interval:
         """
         Convert a CSV or database row to an Interval.
         """
-        from_stop = Stop(
-            (row["FromStopLongitude"], row["FromStopLatitude"]),
-            id=row["FromStopNumber"],
-            description=row["FromStopDescription"],
+        from_stop = Stop.from_row(
+            row["FromStopLongitude"],
+            row["FromStopLatitude"],
+            row["FromStopNumber"],
+            row["FromStopDescription"],
         )
-        to_stop = Stop(
-            (row["ToStopLongitude"], row["ToStopLatitude"]),
-            id=row["ToStopNumber"],
-            description=row["ToStopDescription"],
+        to_stop = Stop.from_row(
+            row["ToStopLongitude"],
+            row["ToStopLatitude"],
+            row["ToStopNumber"],
+            row["ToStopDescription"],
         )
 
         description = row.get("IntervalDescription")

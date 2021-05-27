@@ -20,6 +20,12 @@ class IntervalCalculation:
     fastest_path: Optional[Path] = attr.ib(default=None)
     shortest_path: Optional[Path] = attr.ib(default=None)
 
+    def is_located(self):
+        """
+        Return True if the given interval has locations.
+        """
+        return self.interval.is_located()
+
     @property
     def from_stop(self) -> Stop:
         "Return the from_stop of the Interval."
@@ -81,5 +87,6 @@ def should_calculate(interval: Interval) -> bool:
     Return True if we should calculate a path for the given Interval.
 
     - do not calculate Revenue intervals
+    - do not calculate intervals which do not have locations
     """
-    return interval.type != IntervalType.REVENUE
+    return interval.type != IntervalType.REVENUE and interval.is_located()
