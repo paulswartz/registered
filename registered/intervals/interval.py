@@ -20,10 +20,13 @@ class Stop(Point):
         id: str = None,
         description: Optional[str] = None,
     ):
-        if not isinstance(point, Point):
-            point = Point([float(val) for val in point])
         if id is None:
             raise ValueError("id is required")
+        if not isinstance(point, Point):
+            try:
+                point = Point([float(val) for val in point])
+            except ValueError as e:
+                raise ValueError(f"unable to create Stop id={id!r}") from e
         Point.__init__(self, point)
         self.id = id
         self.description = description
