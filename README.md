@@ -82,7 +82,7 @@ $ pipenv run validate <path to Rating/Combine or Rating/Combine/HASTUS_export>
 Print a CSV which has the service information for each garage, by date. This step is meant to help facilitate TM-03.05, step 7 in [TransitMaster New Rating Procedure]
 
 ```
-$ pipenv run calendar <path to Rating/Combine or Rating/Combine/HASTUS_export>
+$ pipenv run calendar <path to Rating/Combine/HASTUS_export>
 ```
 
 ## Cheat Sheet
@@ -90,7 +90,7 @@ $ pipenv run calendar <path to Rating/Combine or Rating/Combine/HASTUS_export>
 Print a summary of the relevant dates/services for the rating.
 
 ```
-$ pipenv run calendar <path to Rating/Combine/HASTUS_export>
+$ pipenv run cheat_sheet <path to Rating/Combine/HASTUS_export>
 ```
 
 ## Stop Comparison
