@@ -87,7 +87,8 @@ jobs:
     - name: Install Pipenv
       run: |
         pip install pipenv
-        pipenv --python "${{ env.PYTHON_VERSION }}"
+        conda run which python
+        pipenv --python "$(conda run which python)"
     # - name: Install Fiona (Windows)
     #   if: ${{ runner.os == 'Windows' }}
     #   run: |
