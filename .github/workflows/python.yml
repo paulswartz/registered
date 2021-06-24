@@ -111,7 +111,9 @@ jobs:
       id: has-coverage
       if: ${{ always() }}
       run: |
-        test -d htmlcov && echo "::set-output name=exists::true"
+        if test -d htmlcov; then
+          echo "::set-output name=exists::true"
+        fi
     - name: Upload coverage artifact
       if: ${{ always() && steps.has-coverage.outputs.exists }}
       uses: actions/upload-artifact@v2
