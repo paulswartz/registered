@@ -56,13 +56,6 @@ jobs:
     #     echo "LIBPATH=$env:LIBPATH;C:\Miniconda\Library\lib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     #     echo "INCLUDE=$env:INCLUDE;C:\Miniconda\Library\include" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     #     echo "CL=-IC:\Miniconda\Library\include /link /L:C:\Miniconda\Library\lib /LIBPATH:C:\Miniconda\Library\lib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-    - uses: actions/checkout@v2
-    - name: Restore dependencies cache
-      uses: actions/cache@v2
-      with:
-        path: cache
-        key: ${{ runner.os }}-cache-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: ${{ runner.os }}-cache-
     - name: Install GDAL (Windows)
       run: |
         md -Force cache
@@ -99,6 +92,13 @@ jobs:
         # pipenv run pip install fiona==1.8.19 --build-option="-IC:\\gdal\\include" --build-option="-lgdal_i" --build-option="-LC:\\gdal\\lib" --build-option="-LC:\\gdal\\bin"
         #ls -R cache/venv
         pipenv run python -c "import fiona"
+    - uses: actions/checkout@v2
+    - name: Restore dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: cache
+        key: ${{ runner.os }}-cache-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: ${{ runner.os }}-cache-
     - name: Install dependencies
       run: pipenv sync -d
     - name: Check formatting
