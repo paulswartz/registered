@@ -87,9 +87,8 @@ jobs:
     #   if: ${{ runner.os == 'Windows' }}
     - name: Install Pipenv
       run: |
-        ls -l C:\Miniconda
         pip install -U pip pipenv
-        pipenv --python "C:\Miniconda\python" --site-packages
+        python -m pipenv --site-packages
     # - name: Install Fiona (Windows)
     #   if: ${{ runner.os == 'Windows' }}
     #   run: |
