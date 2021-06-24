@@ -27,6 +27,9 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: "${{ env.PYTHON_VERSION }}"  # TODO, use version from .tool-versions
+    - uses: s-weigand/setup-conda@v1
+      with:
+        conda-channels: conda-forge
     # - name: Restore GDAL cache
     #   uses: actions/cache@v2
     #   if: ${{ runner.os == 'Windows' }}
@@ -56,41 +59,44 @@ jobs:
     #     echo "LIBPATH=$env:LIBPATH;C:\Miniconda\Library\lib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     #     echo "INCLUDE=$env:INCLUDE;C:\Miniconda\Library\include" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     #     echo "CL=-IC:\Miniconda\Library\include /link /L:C:\Miniconda\Library\lib /LIBPATH:C:\Miniconda\Library\lib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-    - name: Install GDAL (Windows)
-      run: |
-        md -Force cache
-        curl http://download.gisinternals.com/sdk/downloads/$env:GIS_INTERNALS -C - --output cache/$env:GIS_INTERNALS
-        7z x cache/$env:GIS_INTERNALS -oC:\gdal
-        curl http://download.gisinternals.com/sdk/downloads/$env:GIS_INTERNALS_LIBS -C - --output cache/$env:GIS_INTERNALS_LIBS
-        7z x cache/$env:GIS_INTERNALS_LIBS -oC:\gdal
-        echo "C:\gdal" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "C:\gdal\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "C:\gdal\lib" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "C:\gdal\data" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "C:\gdal\bin\gdal\apps" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "LIB=C:\gdal\lib;C:\gdal\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "LIBPATH=C:\gdal\lib;C:\gdal\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "GDAL_DATA=C:\gdal\bin\gdal-data" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "PROJ_LIB=C:\gdal\bin\proj6\share" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "CL=-IC:\gdal\include /link /LIBPATH:C:\gdal\lib /LIBPATH:C:\gdal\bin /VERBOSE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo @"
-        [build_ext]
-        include_dirs=C:\gdal\include
-        library_dirs=C:\gdal\lib;C:\gdal\bin
-        "@ | Out-File -FilePath $env:HOME/.pydistutils.cfg -Encoding utf8 -Append
-        ls -R C:\gdal
-        cp C:\gdal\bin\*.dll .
-      if: ${{ runner.os == 'Windows' }}
+    # - name: Install GDAL (Windows)
+    #   run: |
+    #     md -Force cache
+    #     curl http://download.gisinternals.com/sdk/downloads/$env:GIS_INTERNALS -C - --output cache/$env:GIS_INTERNALS
+    #     7z x cache/$env:GIS_INTERNALS -oC:\gdal
+    #     curl http://download.gisinternals.com/sdk/downloads/$env:GIS_INTERNALS_LIBS -C - --output cache/$env:GIS_INTERNALS_LIBS
+    #     7z x cache/$env:GIS_INTERNALS_LIBS -oC:\gdal
+    #     echo "C:\gdal" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    #     echo "C:\gdal\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    #     echo "C:\gdal\lib" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    #     echo "C:\gdal\data" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    #     echo "C:\gdal\bin\gdal\apps" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    #     echo "LIB=C:\gdal\lib;C:\gdal\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    #     echo "LIBPATH=C:\gdal\lib;C:\gdal\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    #     echo "GDAL_DATA=C:\gdal\bin\gdal-data" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    #     echo "PROJ_LIB=C:\gdal\bin\proj6\share" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    #     echo "CL=-IC:\gdal\include /link /LIBPATH:C:\gdal\lib /LIBPATH:C:\gdal\bin /VERBOSE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    #     echo @"
+    #     [build_ext]
+    #     include_dirs=C:\gdal\include
+    #     library_dirs=C:\gdal\lib;C:\gdal\bin
+    #     "@ | Out-File -FilePath $env:HOME/.pydistutils.cfg -Encoding utf8 -Append
+    #     ls -R C:\gdal
+    #     cp C:\gdal\bin\*.dll .
+    #   if: ${{ runner.os == 'Windows' }}
     - name: Install Pipenv
       run: |
         pip install pipenv
         pipenv --python "${{ env.PYTHON_VERSION }}"
-    - name: Install Fiona (Windows)
-      if: ${{ runner.os == 'Windows' }}
-      run: |
-        pipenv run pip install -v --global-option=build_ext --global-option="-IC:\gdal\include" --global-option="-lC:\gdal\lib\gdal_i" --global-option="-LC:\gdal\lib" --global-option="-LC:\gdal\bin" fiona==1.8.19
-        # pipenv run pip install fiona==1.8.19 --build-option="-IC:\\gdal\\include" --build-option="-lgdal_i" --build-option="-LC:\\gdal\\lib" --build-option="-LC:\\gdal\\bin"
-        #ls -R cache/venv
+    # - name: Install Fiona (Windows)
+    #   if: ${{ runner.os == 'Windows' }}
+    #   run: |
+    #     pipenv run pip install -v --global-option=build_ext --global-option="-IC:\gdal\include" --global-option="-lC:\gdal\lib\gdal_i" --global-option="-LC:\gdal\lib" --global-option="-LC:\gdal\bin" fiona==1.8.19
+    #     # pipenv run pip install fiona==1.8.19 --build-option="-IC:\\gdal\\include" --build-option="-lgdal_i" --build-option="-LC:\\gdal\\lib" --build-option="-LC:\\gdal\\bin"
+    #     #ls -R cache/venv
+    - run: |
+        conda install geopandas
+    - run: |
         pipenv run python -c "import fiona"
     - uses: actions/checkout@v2
     - name: Restore dependencies cache
