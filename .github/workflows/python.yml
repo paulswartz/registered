@@ -107,7 +107,7 @@ jobs:
         restore-keys: ${{ runner.os }}-cache-
     - name: Install dependencies
       run: |
-        py_path=$((Get-Command python).Path)
+        Set-Variable -Name py_path -Value (Get-Command python).Path
         echo $py_path
         pipenv --python $py_path
         pipenv sync -d
