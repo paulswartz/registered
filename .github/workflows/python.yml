@@ -23,12 +23,13 @@ jobs:
       # GIS_INTERNALS: "release-1800-x64-gdal-1-11-4-mapserver-6-4-3.zip"
       # GIS_INTERNALS_LIBS: "release-1800-x64-gdal-1-11-4-mapserver-6-4-3-libs.zip"
     steps:
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: "${{ env.PYTHON_VERSION }}"  # TODO, use version from .tool-versions
+    # - name: Set up Python
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: "${{ env.PYTHON_VERSION }}"  # TODO, use version from .tool-versions
     - uses: s-weigand/setup-conda@v1
       with:
+        python-version: "${{ env.PYTHON_VERSION }}"  # TODO, use version from .tool-versions
         conda-channels: conda-forge
     # - name: Restore GDAL cache
     #   uses: actions/cache@v2
@@ -86,9 +87,8 @@ jobs:
     #   if: ${{ runner.os == 'Windows' }}
     - name: Install Pipenv
       run: |
-        ls -l /c/Miniconda/python
         pip install pipenv
-        pipenv --python $(conda run which python) --site-packages
+        pipenv --python "C:\Miniconda\python" --site-packages
     # - name: Install Fiona (Windows)
     #   if: ${{ runner.os == 'Windows' }}
     #   run: |
