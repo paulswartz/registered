@@ -86,6 +86,7 @@ jobs:
     #   if: ${{ runner.os == 'Windows' }}
     - name: Install Pipenv
       run: |
+        ls -l /c/Miniconda/python
         pip install pipenv
         pipenv --python $(conda run which python) --site-packages
     # - name: Install Fiona (Windows)
@@ -117,7 +118,7 @@ jobs:
       id: has-coverage
       if: ${{ always() }}
       run: |
-        test -d && echo "::set-output name=exists::true" || true
+        test -d htmlcov && echo "::set-output name=exists::true" || true
     - name: Upload coverage artifact
       if: ${{ always() && steps.has-coverage.outputs.exists }}
       uses: actions/upload-artifact@v2
