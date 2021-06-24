@@ -19,6 +19,7 @@ jobs:
       GDAL_VERSION: 2.4.4
       GIS_INTERNALS: "release-1911-x64-gdal-2-4-4-mapserver-7-4-3.zip"
       GIS_INTERNALS_LIBS: "release-1911-x64-gdal-2-4-4-mapserver-7-4-3-libs.zip"
+      PIPENV_SITE_PACKAGES: true
       # GDAL_VERSION: 1.11.4
       # GIS_INTERNALS: "release-1800-x64-gdal-1-11-4-mapserver-6-4-3.zip"
       # GIS_INTERNALS_LIBS: "release-1800-x64-gdal-1-11-4-mapserver-6-4-3-libs.zip"
@@ -88,7 +89,7 @@ jobs:
     - name: Install Pipenv
       run: |
         pip install -U pip pipenv
-        python -m pipenv --site-packages
+        #python -m pipenv --site-packages
     # - name: Install Fiona (Windows)
     #   if: ${{ runner.os == 'Windows' }}
     #   run: |
@@ -107,7 +108,7 @@ jobs:
         key: ${{ runner.os }}-cache-${{ hashFiles('Pipfile.lock') }}
         restore-keys: ${{ runner.os }}-cache-
     - name: Install dependencies
-      run: pipenv sync -d
+      run: pipenv sync -d --site-packages
     - name: Check formatting
       run: pipenv run format --check
     - name: Linting
