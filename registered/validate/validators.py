@@ -513,6 +513,29 @@ def validate_calendar_exceptions_have_unique_runs(rating):
                 )
 
 
+def validate_services_have_unique_blocks(rating):
+    """
+    Validate that each used service ID has unique block IDs.
+
+    Inside TransitMaster, we only use the last 3 digits of the service ID to
+    identify which blocks/runs are active.
+    """
+    seen = set()
+    for record in rating["blk"]:
+        if not isinstance(record, parser.Block):
+            continue
+        key = (record.block_id, record.service_key)
+        if key in seen:
+            yield ValidationError(
+                file_type="blk",
+                error="duplicate_block_on_service",
+                key=key,
+                description="",
+            )
+        else:
+            seen.add(key)
+
+
 ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
     validate_all_blocks_have_runs,
@@ -520,6 +543,7 @@ ALL_VALIDATORS = [
     validate_all_runs_have_blocks,
     validate_block_garages,
     validate_calendar_exceptions_have_unique_runs,
+    validate_services_have_unique_blocks,
     validate_no_extra_timepoints,
     validate_pattern_stop_has_node,
     validate_routes_have_two_directions,
