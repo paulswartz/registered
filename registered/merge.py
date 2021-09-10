@@ -36,7 +36,8 @@ MERGE_EXTENSIONS = ["nde", "plc", "rte", "trp", "pat", "ppat", "blk", "crw", "ca
 def fast_merge(input_filenames, output_filename, extra=""):
     """
     Merge files.
-    Replace 'dudly' with 'nubn ' since the timepoint was renamed but it's not easy to change the ID in HASTUS.
+    Replace 'dudly' with 'nubn ' since the timepoint was renamed 
+    but it's not easy to change the ID in HASTUS.
     """
 
     with open(output_filename, "a") as output_file:
