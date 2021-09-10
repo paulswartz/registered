@@ -175,7 +175,9 @@ VALID_GARAGES = {
     "charl",
     "fell",
     "lynn",
+    "marbl",
     "ncamb",
+    "ngate",
     "prwb",
     "soham",
     "qubus",
@@ -217,7 +219,10 @@ def validate_block_garages(rating):
         if first_garage != last_garage and (first_garage, last_garage) not in {
             ("censq", "lynn"),
             ("lynn", "censq"),
+            ("lynn", "ngate"),
             ("lynn", "wondw"),
+            ("marbl", "lynn"),
+            ("ngate", "lynn"),
             ("wondw", "lynn"),
         }:
             yield ValidationError(
