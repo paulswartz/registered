@@ -35,15 +35,14 @@ MERGE_EXTENSIONS = ["nde", "plc", "rte", "trp", "pat", "ppat", "blk", "crw", "ca
 
 def fast_merge(input_filenames, output_filename, extra=""):
     """
-    Merge files quickly by copying the first one.
+    Merge files. 
+    Replace 'dudly' with 'nubn ' since the timepoint was renamed but it's not easy to change the ID in HASTUS.
     """
-    first_filename = input_filenames[0]
-    shutil.copy(first_filename, output_filename)
 
     with open(output_filename, "a") as output_file:
-        for input_filename in input_filenames[1:]:
+        for input_filename in input_filenames:
             with open(input_filename) as input_file:
-                output_file.write(input_file.read())
+                output_file.write(input_file.read().replace('dudly', 'nubn '))
         output_file.write(extra)
 
 
