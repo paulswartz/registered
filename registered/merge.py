@@ -33,17 +33,17 @@ MERGE_DIRECTORIES = [
 MERGE_EXTENSIONS = ["nde", "plc", "rte", "trp", "pat", "ppat", "blk", "crw", "cal"]
 
 
-def fast_merge(input_filenames, output_filename, extra=""):
+def merge_and_rename_timepoint(input_filenames, output_filename, extra=""):
     """
     Merge files.
-    Replace 'dudly' with 'nubn ' since the timepoint was renamed 
+    Replace ';dudly ;' with ';nubn  ;' since the timepoint was renamed
     but it's not easy to change the ID in HASTUS.
     """
 
     with open(output_filename, "a") as output_file:
         for input_filename in input_filenames:
             with open(input_filename) as input_file:
-                output_file.write(input_file.read().replace("dudly", "nubn "))
+                output_file.write(input_file.read().replace(";dudly ;", ";nubn  ;"))
         output_file.write(extra)
 
 
@@ -107,7 +107,7 @@ def merge_extension(path, prefix, extension):
         )
     else:
         extra = ""
-    fast_merge(files_to_merge, output_filename, extra)
+    merge_and_rename_timepoint(files_to_merge, output_filename, extra)
 
 
 def merge_combine(path):
