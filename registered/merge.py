@@ -11,7 +11,6 @@ Merge a given HASTUS export (along with the test files) into one file per type.
 - CRW: runs
 """
 import argparse
-import shutil
 import pathlib
 from datetime import datetime
 
@@ -33,17 +32,23 @@ MERGE_DIRECTORIES = [
 MERGE_EXTENSIONS = ["nde", "plc", "rte", "trp", "pat", "ppat", "blk", "crw", "cal"]
 
 
-def fast_merge(input_filenames, output_filename, extra=""):
+def rename_timepoint(data):
     """
-    Merge files quickly by copying the first one.
+    Replace ';dudly ;' with ';nubn  ;' since the timepoint was renamed
+    but it's not easy to change the ID in HASTUS.
     """
-    first_filename = input_filenames[0]
-    shutil.copy(first_filename, output_filename)
+    return data.replace(";dudly ;", ";nubn  ;")
 
-    with open(output_filename, "a") as output_file:
-        for input_filename in input_filenames[1:]:
+
+def merge_and_rename_timepoint(input_filenames, output_filename, extra=""):
+    """
+    Merge files.
+    """
+
+    with open(output_filename, "w") as output_file:
+        for input_filename in input_filenames:
             with open(input_filename) as input_file:
-                output_file.write(input_file.read())
+                output_file.write(rename_timepoint(input_file.read()))
         output_file.write(extra)
 
 
@@ -107,7 +112,7 @@ def merge_extension(path, prefix, extension):
         )
     else:
         extra = ""
-    fast_merge(files_to_merge, output_filename, extra)
+    merge_and_rename_timepoint(files_to_merge, output_filename, extra)
 
 
 def merge_combine(path):
