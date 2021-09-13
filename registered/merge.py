@@ -11,7 +11,6 @@ Merge a given HASTUS export (along with the test files) into one file per type.
 - CRW: runs
 """
 import argparse
-import shutil
 import pathlib
 from datetime import datetime
 
