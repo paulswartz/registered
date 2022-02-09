@@ -45,7 +45,7 @@ def merge_and_rename_timepoint(input_filenames, output_filename, extra=""):
     Merge files.
     """
 
-    with open(output_filename, "w", newline='\r\n') as output_file:
+    with open(output_filename, "w", newline="\r\n") as output_file:
         for input_filename in input_filenames:
             with open(input_filename) as input_file:
                 output_file.write(rename_timepoint(input_file.read()))
