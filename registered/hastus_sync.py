@@ -183,7 +183,9 @@ def schedules_per_garage(tempdir):
     """
     Calculate and write the schedules_per_garage.csv file in Supporting.
     """
-    with open(tempdir / "Supporting" / "schedules_per_garage.csv", "w") as file:
+    with open(
+        tempdir / "Supporting" / "schedules_per_garage.csv", "w", newline="\r\n"
+    ) as file:
         calendar.main_combine(tempdir / "Combine" / "HASTUS_export", file=file)
 
 
@@ -191,7 +193,7 @@ def write_cheat_sheet(tempdir):
     """
     Calculate and write the cheat sheet in Supporting.
     """
-    with open(tempdir / "Supporting" / "cheat_sheet.txt", "w") as file:
+    with open(tempdir / "Supporting" / "cheat_sheet.txt", "w", newline="\r\n") as file:
         cheat_sheet.main_combine(tempdir / "Combine" / "HASTUS_export", file=file)
 
 
