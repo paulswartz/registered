@@ -11,11 +11,23 @@ def test_transitmaster_time():
     assert parser.transitmaster_time("1200x") == time(0, 0)
 
 
-def test_RevenueType_for_tag():
-    assert parser.RevenueType.for_tag("0") == parser.RevenueType.NON_REVENUE
-    assert parser.RevenueType.for_tag(" ") == parser.RevenueType.NON_REVENUE
-    assert parser.RevenueType.for_tag("1") == parser.RevenueType.REVENUE
-    assert parser.RevenueType.for_tag("X") == parser.RevenueType.OPPORTUNITY
+def test_PatternRevenueType_for_tag():
+    assert (
+        parser.PatternRevenueType.for_tag("0") == parser.PatternRevenueType.NON_REVENUE
+    )
+    assert (
+        parser.PatternRevenueType.for_tag(" ") == parser.PatternRevenueType.NON_REVENUE
+    )
+    assert parser.PatternRevenueType.for_tag("1") == parser.PatternRevenueType.REVENUE
+    assert parser.PatternRevenueType.for_tag("X") == parser.PatternRevenueType.TEST
+
+
+def test_TripType_for_tag():
+    assert parser.TripType.for_tag("0") == parser.TripType.REGULAR
+    assert parser.TripType.for_tag("1") == parser.TripType.PULL_OUT
+    assert parser.TripType.for_tag("2") == parser.TripType.PULL_IN
+    assert parser.TripType.for_tag("3") == parser.TripType.DEADHEAD
+    assert parser.TripType.for_tag("5") == parser.TripType.OPPORTUNITY
 
 
 def test_Stop_latitude_longitude():
@@ -37,6 +49,8 @@ def test_parser_PAT_TPS():
     lines = [
         "PAT;   90;0090_0047;Inbound   ; 4;907     ;1;_       ;Davis Station - Assembly Row",
         "TPS;5104    ;davis ;907     ;1; ",
+        "TPS;2582    ;      ;907     ;0; ",
+        "TPS;98481   ;      ;        ; ; ",
         "TPS;00009   ;arbor ;        ;X; ",
     ]
     expected = [
@@ -45,21 +59,33 @@ def test_parser_PAT_TPS():
             pattern_id="0090_0047",
             direction_name="Inbound",
             sign_code=907,
+            revenue_type=parser.PatternRevenueType.REVENUE,
             variant="_",
             variant_name="Davis Station - Assembly Row",
-            revenue_type=parser.RevenueType.REVENUE,
         ),
         parser.PatternStop(
             stop_id="5104",
             timepoint_id="davis",
             sign_code=907,
-            revenue_type=parser.RevenueType.REVENUE,
+            is_timepoint=True,
+        ),
+        parser.PatternStop(
+            stop_id="2582",
+            timepoint_id="",
+            sign_code=907,
+            is_timepoint=False,
+        ),
+        parser.PatternStop(
+            stop_id="98481",
+            timepoint_id="",
+            sign_code=None,
+            is_timepoint=False,
         ),
         parser.PatternStop(
             stop_id="00009",
             timepoint_id="arbor",
             sign_code=None,
-            revenue_type=parser.RevenueType.OPPORTUNITY,
+            is_timepoint=True,
         ),
     ]
     actual = list(parser.parse_lines(lines))
@@ -180,6 +206,10 @@ def test_parser_TRP():
     lines = [
         "TRP;  43857823;        ;12345  ;  193;0193_0029;Regular        ; 0;0;1",
         "PTS; 1045a",
+        "TRP;  51182533;   93433;6      ;  746;0746_0003;Opportunity    ; 5;0;1",
+        "PTS;   0202p",
+        "TRP;  51219528;  202009;12345  ;  111;011150140;Regular        ; 0;0;0",
+        "PTS;   1154a",
         "TRP;   6417265;4    ;12345  ;9903 ;099030001;Regular        ; 0; ;X;9903",
     ]
     expected = [
@@ -187,18 +217,36 @@ def test_parser_TRP():
             trip_id="43857823",
             route_id="193",
             pattern_id="0193_0029",
-            description="Regular",
-            sequence=0,
-            revenue_type=parser.RevenueType.REVENUE,
+            trip_type=parser.TripType.REGULAR,
+            as_directed=False,
+            public_type=parser.PublicType.PUBLIC,
         ),
         parser.TripTime(time=time(10, 45)),
+        parser.Trip(
+            trip_id="51182533",
+            route_id="746",
+            pattern_id="0746_0003",
+            trip_type=parser.TripType.OPPORTUNITY,
+            as_directed=False,
+            public_type=parser.PublicType.PUBLIC,
+        ),
+        parser.TripTime(time=time(14, 2)),
+        parser.Trip(
+            trip_id="51219528",
+            route_id="111",
+            pattern_id="011150140",
+            trip_type=parser.TripType.REGULAR,
+            as_directed=False,
+            public_type=parser.PublicType.NON_PUBLIC,
+        ),
+        parser.TripTime(time=time(11, 54)),
         parser.Trip(
             trip_id="6417265",
             route_id="9903",
             pattern_id="099030001",
-            description="Regular",
-            sequence=0,
-            revenue_type=parser.RevenueType.OPPORTUNITY,
+            trip_type=parser.TripType.REGULAR,
+            as_directed=False,
+            public_type=parser.PublicType.TEST,
         ),
     ]
     actual = list(parser.parse_lines(lines))

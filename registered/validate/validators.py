@@ -111,7 +111,7 @@ def validate_no_extra_timepoints(rating):
         if key is None or key not in timepoints_by_route_direction:
             # missing route/directions already provided a ValidationError above
             continue
-        if record.revenue_type != parser.RevenueType.REVENUE:
+        if not record.is_timepoint:
             continue
 
         timepoint = record.timepoint_id
@@ -247,8 +247,7 @@ def validate_all_blocks_have_trips(rating):
         trip.trip_id
         for trip in rating["trp"]
         if isinstance(trip, parser.Trip)
-        and trip.revenue_type
-        in {parser.RevenueType.REVENUE, parser.RevenueType.OPPORTUNITY}
+        and trip.trip_type in {parser.TripType.REGULAR, parser.TripType.OPPORTUNITY}
     }
 
     def error():
@@ -291,6 +290,7 @@ def validate_trip_has_valid_pattern(rating):
 
     Exceptions:
     - non revenue trips
+    - as-directed trips
     """
     valid_patterns = {
         pattern.pattern_id
@@ -302,8 +302,12 @@ def validate_trip_has_valid_pattern(rating):
         trip
         for trip in rating["trp"]
         if isinstance(trip, parser.Trip)
-        and trip.revenue_type != parser.RevenueType.NON_REVENUE
         and trip.pattern_id not in valid_patterns
+        and not trip.as_directed
+        and (
+            trip.trip_type == parser.TripType.REGULAR
+            or trip.trip_type == parser.TripType.OPPORTUNITY
+        )
     )
 
     for trip in invalid_trips:
@@ -312,6 +316,35 @@ def validate_trip_has_valid_pattern(rating):
             key=trip.trip_id,
             error="trip_with_invalid_pattern",
             description=f"pattern {trip.pattern_id} does not exist",
+        )
+
+
+def validate_all_revenue_trips_are_public(rating):
+    """
+    Validate that each trip is tagged as public.
+
+    Exceptions:
+    - non revenue trips, as-directed trips, test trips
+    """
+
+    non_public_revenue_trips = (
+        trip
+        for trip in rating["trp"]
+        if isinstance(trip, parser.Trip)
+        and trip.public_type == parser.PublicType.NON_PUBLIC
+        and not trip.as_directed
+        and (
+            trip.trip_type == parser.TripType.REGULAR
+            or trip.trip_type == parser.TripType.OPPORTUNITY
+        )
+    )
+
+    for trip in non_public_revenue_trips:
+        yield ValidationError(
+            file_type="trp",
+            key=trip.trip_id,
+            error="trip_revenue_and_non_public",
+            description=f"trip {trip.trip_id} is revenue but non-public",
         )
 
 
@@ -544,6 +577,7 @@ def validate_services_have_unique_blocks(rating):
 ALL_VALIDATORS = [
     validate_all_blocks_have_trips,
     validate_all_blocks_have_runs,
+    validate_all_revenue_trips_are_public,
     validate_all_routes_have_patterns,
     validate_all_runs_have_blocks,
     validate_block_garages,

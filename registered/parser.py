@@ -59,6 +59,18 @@ def boolean_integer(string_or_bool):
     return False
 
 
+def stop_timepoint(string_or_bool):
+    """
+    Converter to convert a boolean or "0"/"1" string to a boolean.
+    Treat "X" as True, empty string as False.
+    """
+    if isinstance(string_or_bool, str):
+        if string_or_bool.strip() == "X":
+            return True
+
+    return boolean_integer(string_or_bool)
+
+
 def strip_timepoints(timepoint_list):
     """
     Converter to convert a list of timepoints with whitespace to a regular list.
@@ -105,21 +117,67 @@ def iso_date(string_or_date):
     return datetime.strptime(string_or_date.strip(), "%d%m%Y").date()
 
 
-class RevenueType(enum.Enum):
+class PatternRevenueType(enum.Enum):
     """
     Type of revenue service.
     """
 
     NON_REVENUE = "0"
     REVENUE = "1"
-    OPPORTUNITY = "X"
+    TEST = "X"
 
     @classmethod
     def for_tag(cls, tag):
         """
-        Convert from a tag present in a PAT, TPS, or TRP record.
+        Convert from a tag present in a PAT record.
 
         Empty values are treated as non-revenue.
+        """
+        if isinstance(tag, cls):
+            return tag
+
+        tag = tag.strip()
+        if tag == "":
+            tag = "0"
+        return cls(tag)
+
+
+class TripType(enum.Enum):
+    """
+    Type of trip.
+    """
+
+    REGULAR = "0"
+    PULL_OUT = "1"
+    PULL_IN = "2"
+    DEADHEAD = "3"
+    OPPORTUNITY = "5"
+
+    @classmethod
+    def for_tag(cls, tag):
+        """
+        Convert from a tag present in a TRP record.
+        """
+        if isinstance(tag, cls):
+            return tag
+
+        tag = tag.strip()
+        return cls(tag)
+
+
+class PublicType(enum.Enum):
+    """
+    Type of public/non-public trip.
+    """
+
+    NON_PUBLIC = "0"
+    PUBLIC = "1"
+    TEST = "X"
+
+    @classmethod
+    def for_tag(cls, tag):
+        """
+        Convert from a tag present in a TRP record. Treat null as NON_PUBLIC.
         """
         if isinstance(tag, cls):
             return tag
@@ -140,7 +198,7 @@ class Pattern:  # pylint: disable=too-few-public-methods
     pattern_id = attr.ib()
     direction_name = attr.ib(converter=strip_whitespace)
     sign_code = attr.ib(converter=optional(int))
-    revenue_type = attr.ib(converter=RevenueType.for_tag)
+    revenue_type = attr.ib(converter=PatternRevenueType.for_tag)
     variant = attr.ib(converter=strip_whitespace)
     variant_name = attr.ib()
 
@@ -153,7 +211,7 @@ class Pattern:  # pylint: disable=too-few-public-methods
             route,
             pattern_id,
             direction_name,
-            _a,
+            _direction_code,
             sign_code,
             revenue_type,
             variant,
@@ -180,15 +238,15 @@ class PatternStop:  # pylint: disable=too-few-public-methods
     stop_id = attr.ib(converter=strip_whitespace)
     timepoint_id = attr.ib(converter=strip_whitespace)
     sign_code = attr.ib(converter=optional(int))
-    revenue_type = attr.ib(converter=RevenueType.for_tag)
+    is_timepoint = attr.ib(converter=stop_timepoint)
 
     @classmethod
     def from_line(cls, parts):
         """
         Convert a list of parts to a PatternStop
         """
-        [stop_id, timepoint_id, sign_code, revenue_type, _a] = parts
-        return cls(stop_id, timepoint_id, sign_code, revenue_type)
+        [stop_id, timepoint_id, sign_code, is_timepoint, _a] = parts
+        return cls(stop_id, timepoint_id, sign_code, is_timepoint)
 
 
 @attr.s
@@ -376,9 +434,9 @@ class Trip:  # pylint: disable=too-few-public-methods
     trip_id = attr.ib(converter=strip_whitespace)
     route_id = attr.ib(converter=strip_whitespace)
     pattern_id = attr.ib(converter=strip_whitespace)
-    description = attr.ib(converter=strip_whitespace)
-    sequence = attr.ib(converter=int)
-    revenue_type = attr.ib(converter=RevenueType.for_tag)
+    trip_type = attr.ib(converter=TripType.for_tag)
+    as_directed = attr.ib(converter=boolean_integer)
+    public_type = attr.ib(converter=PublicType.for_tag)
 
     @classmethod
     def from_line(cls, parts):
@@ -391,13 +449,13 @@ class Trip:  # pylint: disable=too-few-public-methods
             _,
             route_id,
             pattern_id,
-            description,
-            sequence,
-            _,
-            revenue_type,
-            *_,
+            _trip_type_description,
+            trip_type,
+            as_directed,
+            public_type,
+            *_rest,
         ] = parts
-        return cls(trip_id, route_id, pattern_id, description, sequence, revenue_type)
+        return cls(trip_id, route_id, pattern_id, trip_type, as_directed, public_type)
 
 
 @attr.s
