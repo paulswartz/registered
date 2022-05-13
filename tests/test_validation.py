@@ -38,4 +38,8 @@ def test_invalid_ratings(path):
             if not any(True for error in errors if line in repr(error)):
                 raise AssertionError(
                     f"expected to see an error matching {repr(line)}, actual errors:\n{error_text}"
+
+                # ensure that we don't see unexpected errors
+            if "timepoint_missing_from_timepoint_pattern" in expected.read():
+                if "timepoints_out_of_order" in expected.read(): print ("Unexpected error matching")
                 )
