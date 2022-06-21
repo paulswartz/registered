@@ -47,6 +47,6 @@ def test_invalid_ratings(path):
             for line in unexpected:
                 line = line.strip()
                 if any(True for error in errors if line in repr(error)):
-                        raise AssertionError(
-                            f"did not expect to see an error matching {repr(line)}, actual errors:\n{error_text}"
-                        )
+                    raise AssertionError(
+                        f"did not expect to see an error matching {repr(line)}, actual errors:\n{error_text}"
+                    )
