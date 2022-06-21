@@ -1,5 +1,6 @@
 from pathlib import Path
 import pytest
+import os.path
 from registered import rating, validate
 
 VALID_TESTS_DIR = Path(__file__).parent / "support" / "validation" / "valid"
@@ -38,8 +39,14 @@ def test_invalid_ratings(path):
             if not any(True for error in errors if line in repr(error)):
                 raise AssertionError(
                     f"expected to see an error matching {repr(line)}, actual errors:\n{error_text}"
-
-                # ensure that we don't see unexpected errors
-            if "timepoint_missing_from_timepoint_pattern" in expected.read():
-                if "timepoints_out_of_order" in expected.read(): print ("Unexpected error matching")
                 )
+    # ensure that we don't see unexpected errors
+    unexpected_errors_path = path / "UNEXPECTED_ERRORS.txt"
+    if unexpected_errors_path.exists():
+        with open(path / "UNEXPECTED_ERRORS.txt") as unexpected:
+            for line in unexpected:
+                line = line.strip()
+                if any(True for error in errors if line in repr(error)):
+                        raise AssertionError(
+                            f"did not expect to see an error matching {repr(line)}, actual errors:\n{error_text}"
+                        )
