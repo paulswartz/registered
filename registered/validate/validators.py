@@ -140,14 +140,17 @@ def validate_timepoints_in_consistent_order(rating):
         if expected_timepoints == []:
             return  # pylint: disable
 
-        if not helpers.same_list_order(expected_timepoints, timepoints):
+        filtered_timepoints = [
+            timepoint for timepoint in timepoints if timepoint in expected_timepoints
+        ]
+        if not helpers.same_list_order(expected_timepoints, filtered_timepoints):
             yield ValidationError(
                 file_type="pat",
                 key=pattern.pattern_id,
                 error="timepoints_out_of_order",
                 description=(
                     f"expected timepoint order: {repr(expected_timepoints)} "
-                    f"actual timepoint order: {repr(timepoints)}"
+                    f"actual timepoint order: {repr(filtered_timepoints)}"
                 ),
             )
 
