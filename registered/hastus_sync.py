@@ -152,17 +152,24 @@ def pull_prior_versions(tempdir):
         ),
         tempdir / "PriorVersions" / "svc-desc.txt",
     )
-    annun_dirs = smbclient.listdir(
-        smb_path(
-            TRANSITMASTER_DB,
-            "e$",
-            "FTP_ROOT",
-            "Operational Data",
-            "Announcements",
-            "Current_Release",
-        )
+    annun_path = smb_path(
+        TRANSITMASTER_DB,
+        "e$",
+        "FTP_ROOT",
+        "Operational Data",
+        "Announcements",
+        "Current_Release",
     )
-    universal_dir = sorted(dir for dir in annun_dirs if "Universal" in dir)[0]
+
+    annun_dirs = smbclient.listdir(annun_path)
+    try:
+        universal_dir = sorted(dir for dir in annun_dirs if "Universal" in dir)[0]
+    except IndexError:
+        # pylint: disable=raise-missing-from
+        raise RuntimeError(
+            f"unable to find Universal announcements in {annun_path}\n"
+            f"Found: {annun_dirs!r}"
+        )
     smbclient.shutil.copyfile(
         smb_path(
             TRANSITMASTER_DB,
