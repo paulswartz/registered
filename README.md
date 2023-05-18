@@ -17,7 +17,7 @@ $ brew install freetds gdal freetds
 $ asdf install
 $ asdf reshim
 $ pip install pipenv
-$ pipenv install  # --dev if you want to do development on the scripts
+$ pipenv sync  # --dev if you want to do development on the scripts
 $ cp .env.template .env
 $ vi .env  # configure environment variable
 ```
@@ -25,10 +25,10 @@ $ vi .env  # configure environment variable
 ### Windows
 ```
 $ choco install pyenv-win
-$ pyenv install
+$ pyenv install 3.9.2
 $ pyenv rehash
 $ pip install pipenv
-$ pipenv install  # --dev if you want to do development on the scripts
+$ pipenv sync  # --dev if you want to do development on the scripts
 $ copy .env.template .env
 $ wordpad .env  # configure environment variable
 ```

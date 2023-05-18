@@ -5,17 +5,20 @@ on: [push, pull_request]
 jobs:
   tests:
     name: Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       WORKON_HOME: cache/venv
       PIPENV_CACHE_DIR: cache/pipenv
       OSMNX_CACHE_DIR: cache/osmnx
     steps:
     - uses: actions/checkout@v2
+    - name: Get Python version
+      id: python_version
+      run: echo "version=$(cat .python-version)" >> "$GITHUB_OUTPUT"
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: "3.9.2"  # TODO, use version from .tool-versions
+        python-version: ${{ steps.python_version.outputs.version }}
     - name: Restore dependencies cache
       uses: actions/cache@v2
       with:
