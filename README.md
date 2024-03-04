@@ -13,7 +13,7 @@ Reminder: Before the set-up process, clone the registered repository and make su
 
 ### Linux/MacOS
 ```
-$ brew install proj freetds
+$ brew install freetds gdal freetds
 $ asdf install
 $ asdf reshim
 $ pip install pipenv
