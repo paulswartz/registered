@@ -11,16 +11,16 @@ jobs:
       PIPENV_CACHE_DIR: cache/pipenv
       OSMNX_CACHE_DIR: cache/osmnx
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Get Python version
       id: python_version
       run: echo "version=$(cat .python-version)" >> "$GITHUB_OUTPUT"
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ steps.python_version.outputs.version }}
     - name: Restore dependencies cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: cache
         key: ${{ runner.os }}-cache-${{ hashFiles('Pipfile.lock') }}
@@ -40,7 +40,7 @@ jobs:
         test -d htmlcov && echo "::set-output name=exists::true"
     - name: Upload coverage artifact
       if: ${{ always() && steps.has-coverage.outputs.exists }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: python-coverage-report
         path: htmlcov/
