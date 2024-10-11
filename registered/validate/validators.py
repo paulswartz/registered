@@ -443,7 +443,15 @@ def validate_routes_have_two_directions(rating):
     - wad
     """
     default_expected_count = 2
-    override_counts = {"171": 1, "195": 1, "214": 1, "600": 1, "601": 1, "rad": 1, "wad": 1}
+    override_counts = {
+        "171": 1,
+        "195": 1,
+        "214": 1,
+        "600": 1,
+        "601": 1,
+        "rad": 1,
+        "wad": 1,
+    }
     routes_to_directions = defaultdict(set)
 
     for trip_pattern in rating["ppat"]:
