@@ -1,6 +1,7 @@
 """
 CLI tool to output the calendar for each garage
 """
+
 import sys
 import argparse
 from registered.rating import Rating

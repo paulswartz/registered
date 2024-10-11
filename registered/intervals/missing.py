@@ -1,6 +1,7 @@
 """
 Calculate shortest/fastest paths for missing intervals.
 """
+
 import argparse
 import csv
 from pathlib import Path

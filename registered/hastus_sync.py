@@ -5,6 +5,7 @@ The HASTUS data is exported \\\\<HASTUS_FILE_SERVER>\\KKO. We want those files t
 \\\\<TRANSITMASTER_FILE_SERVER>\\C$\\Ratings, along with some other directories. The basic template
 is in support\\rating_template.
 """
+
 import itertools
 import argparse
 import os
@@ -209,7 +210,7 @@ def push_directory(args, tempdir):
     Push the local merged rating to the TransitMaster server.
     """
     prefix = None
-    for (dirpath, dirnames, filenames) in os.walk(tempdir):
+    for dirpath, dirnames, filenames in os.walk(tempdir):
         if prefix is None:
             prefix = dirpath
         short_path = dirpath[len(prefix) + 1 :]

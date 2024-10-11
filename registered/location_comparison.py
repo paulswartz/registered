@@ -1,6 +1,7 @@
 """
 CLI tool to compare locations between the export and TransitMaster.
 """
+
 import argparse
 from pyproj import Geod
 from registered.rating import Rating

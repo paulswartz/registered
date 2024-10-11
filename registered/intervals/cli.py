@@ -1,6 +1,7 @@
 """
 Shared code for the `missing_intervals` and `stop_intervals` scripts.
 """
+
 from typing import Callable, Optional
 import osmnx as ox
 from .page import Page
@@ -62,7 +63,7 @@ def page_from_intervals(intervals: list[Interval]) -> Optional[Page]:
 
     page = Page(graph=graph)
 
-    for (index, interval) in enumerate(intervals, 1):
+    for index, interval in enumerate(intervals, 1):
         ox.utils.log(f"processing row {index} of {row_count}: {interval!r}")
         calc = IntervalCalculation.calculate(interval=interval, graph=graph)
         page.add(calc)

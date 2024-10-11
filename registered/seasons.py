@@ -11,7 +11,7 @@ def sort_key_hastus_export(rating_folder):
 
     It does this by breaking the name into a tuple (2021, 0, "AVL Data").
     """
-    for (index, season) in enumerate(SEASONS):
+    for index, season in enumerate(SEASONS):
         if not rating_folder.startswith(season):
             continue
 

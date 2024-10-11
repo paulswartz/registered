@@ -34,6 +34,7 @@ Mon 1/18 hl6
 Mon 2/15 hl6
 2/16 - 2/19 ns1
 """
+
 import sys
 import argparse
 from collections import defaultdict
@@ -81,7 +82,7 @@ class CheatSheet:
         )
         date_combos.sort()
         exceptions = []
-        for (combo, date_group) in itertools.groupby(
+        for combo, date_group in itertools.groupby(
             date_combos, key=operator.itemgetter(1)
         ):
             dates = {date for (date, _) in date_group}

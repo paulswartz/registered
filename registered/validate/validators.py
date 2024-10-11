@@ -1,6 +1,7 @@
 """
 Collection of validators for rating data.
 """
+
 from collections import defaultdict
 import itertools
 import attr
@@ -45,7 +46,7 @@ def validate_unique_pattern_prefix(rating):
 
         patterns_by_prefix[key].add(parsed.pattern_id)
 
-    for (key, pattern_ids) in patterns_by_prefix.items():
+    for key, pattern_ids in patterns_by_prefix.items():
         if len(pattern_ids) == 1:
             continue
 
@@ -65,7 +66,7 @@ def validate_unique_timepoint_pattern(rating):
     for timepoint_pattern in rating["ppat"]:
         patterns_by_id[timepoint_pattern.timepoint_pattern_id].append(timepoint_pattern)
 
-    for (timepoint_pattern_id, patterns) in patterns_by_id.items():
+    for timepoint_pattern_id, patterns in patterns_by_id.items():
         if len(patterns) == 1:
             continue
         [first, *rest] = patterns
@@ -371,7 +372,7 @@ def validate_stop_has_only_one_timepoint(rating):
 
         stop_timepoints[record.stop_id].add(record.timepoint_id)
 
-    for (stop_id, timepoints) in stop_timepoints.items():
+    for stop_id, timepoints in stop_timepoints.items():
         if len(timepoints) == 1:
             continue
 
@@ -443,13 +444,21 @@ def validate_routes_have_two_directions(rating):
     - wad
     """
     default_expected_count = 2
-    override_counts = {"171": 1, "195": 1, "214": 1, "600": 1, "601": 1, "rad": 1, "wad": 1}
+    override_counts = {
+        "171": 1,
+        "195": 1,
+        "214": 1,
+        "600": 1,
+        "601": 1,
+        "rad": 1,
+        "wad": 1,
+    }
     routes_to_directions = defaultdict(set)
 
     for trip_pattern in rating["ppat"]:
         routes_to_directions[trip_pattern.route_id].add(trip_pattern.direction_name)
 
-    for (route_id, direction_names) in routes_to_directions.items():
+    for route_id, direction_names in routes_to_directions.items():
         expected_count = override_counts.get(route_id, default_expected_count)
 
         if len(direction_names) == expected_count:
@@ -545,7 +554,7 @@ def validate_calendar_exceptions_have_unique_runs(rating):
     for combo in possible_exceptions:
         if len(combo) == 1:
             continue
-        for (fst, snd) in itertools.combinations(combo, 2):
+        for fst, snd in itertools.combinations(combo, 2):
             overlaps = runs_by_service_key[fst] & runs_by_service_key[snd]
             for run_id in overlaps:
                 yield ValidationError(

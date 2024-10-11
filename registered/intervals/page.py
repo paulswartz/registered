@@ -1,6 +1,7 @@
 """
 Render shortest/fastest paths for intervals as HTML.
 """
+
 from typing import Any, List, Optional, Tuple
 import attr
 import osmnx as ox
@@ -195,7 +196,7 @@ class Page:
         named_paths = list(
             zip(["Fastest (red)", "Shortest (yellow)"], calculation.paths())
         )
-        for (name, path) in named_paths:
+        for name, path in named_paths:
             results.append(
                 (
                     name,

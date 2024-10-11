@@ -1,6 +1,7 @@
 """
 Calculation of a fastest/shortest path for a given Interval.
 """
+
 from typing import Optional, List
 import attr
 import osmnx as ox

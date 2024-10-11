@@ -1,6 +1,7 @@
 """
 Parser(s) for the TransitMaster export files.
 """
+
 from datetime import datetime, date, time
 import enum
 import attr

@@ -1,6 +1,7 @@
 """
 Helper functions for validating a rating.
 """
+
 import difflib
 
 
@@ -10,7 +11,7 @@ def same_list_order(first, second):
     """
     matcher = difflib.SequenceMatcher(a=first, b=second)
 
-    for (opcode, _, _, _, _) in matcher.get_opcodes():
+    for opcode, _, _, _, _ in matcher.get_opcodes():
         if opcode in {"insert", "replace"}:
             return False
 

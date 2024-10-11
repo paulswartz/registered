@@ -1,6 +1,7 @@
 """
 CLI tool to validate a given HASTUS export for import to TransitMaster.
 """
+
 import argparse
 from registered.rating import Rating
 from registered.validate.validators import ALL_VALIDATORS

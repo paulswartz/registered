@@ -1,6 +1,7 @@
 """
 CLI tool to compare the stops between two ratings.
 """
+
 import argparse
 from collections import defaultdict
 from pyproj import Geod
