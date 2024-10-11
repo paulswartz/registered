@@ -1,6 +1,7 @@
 """
 Helper functions for the routing module.
 """
+
 from shapely.geometry import Point, LineString
 import osmnx as ox
 

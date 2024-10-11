@@ -61,7 +61,7 @@ def test_no_storrow_drive():
     kenmore_busway = Point(-71.09583, 42.348927)
     mass_general = Point(-71.0692, 42.3609)
     (graph, path) = assert_has_path(kenmore_busway, mass_general)
-    for (from_node, to_node) in zip(path, path[1:]):
+    for from_node, to_node in zip(path, path[1:]):
         edge = graph.graph.edges[from_node, to_node, 0]
         if "name" not in edge:
             continue

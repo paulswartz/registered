@@ -1,6 +1,7 @@
 """
 Generic representation of an interval in TransitMaster.
 """
+
 from enum import IntEnum
 from functools import total_ordering
 from typing import Any, Optional, Tuple, Union

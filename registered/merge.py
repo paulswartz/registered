@@ -10,6 +10,7 @@ Merge a given HASTUS export (along with the test files) into one file per type.
 - BLK: blocks
 - CRW: runs
 """
+
 import argparse
 import pathlib
 from datetime import datetime
@@ -73,7 +74,7 @@ def dedup_prefix(files_to_merge):
     """
     most_recent_date = {}
     most_recent = {}
-    for (index, filename) in enumerate(files_to_merge):
+    for index, filename in enumerate(files_to_merge):
         path = pathlib.Path(filename)
         try:
             (prefix, date_str) = path.stem.rsplit("-", maxsplit=1)

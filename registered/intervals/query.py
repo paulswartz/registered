@@ -1,6 +1,7 @@
 """
 Generate a SQL query for returning intervals.
 """
+
 from typing import Optional, Sequence, Any, Union, Tuple, Dict
 from registered import db
 

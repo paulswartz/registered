@@ -1,6 +1,7 @@
 """
 Calculate shortest/fastest paths for missing intervals.
 """
+
 from difflib import SequenceMatcher
 from itertools import count
 import os
@@ -302,7 +303,7 @@ class RestrictedGraph:
             **kwargs,
         )
 
-        for (path, color) in zip(paths, DEFAULT_COLORS):
+        for path, color in zip(paths, DEFAULT_COLORS):
             locations = [
                 (row[1], row[0])
                 for (from_node, to_node) in zip(path, path[1:])
@@ -449,9 +450,9 @@ class RestrictedGraph:
         # heavily penalize edges with a height limit
         if "maxheight_m" in edges.columns:
             bus_height = 3.7  # ~12ft
-            edges.loc[
-                edges["maxheight_m"] < bus_height, ["travel_time", "length"]
-            ] = sys.float_info.max
+            edges.loc[edges["maxheight_m"] < bus_height, ["travel_time", "length"]] = (
+                sys.float_info.max
+            )
 
         nx.set_edge_attributes(graph, values=edges["travel_time"], name="travel_time")
         nx.set_edge_attributes(graph, values=edges["length"], name="length")
@@ -484,7 +485,7 @@ class RestrictedGraph:
         from_ways = ensure_set(from_attrs["osmid"])
         to_ways = ensure_set(to_attrs["osmid"])
 
-        for (node, invalid_from, invalid_to) in self.restrictions:
+        for node, invalid_from, invalid_to in self.restrictions:
             if node != turn:
                 continue
             if (invalid_from & from_ways) and (invalid_to & to_ways):

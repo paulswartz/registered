@@ -1,6 +1,7 @@
 """
 Representation/access to the parsed rating files.
 """
+
 import pathlib
 import attr
 from registered import parser, merge

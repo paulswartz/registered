@@ -1,6 +1,7 @@
 """
 Functions for accessing data from the TransitMaster database.
 """
+
 import itertools
 import os
 import pyodbc
@@ -89,5 +90,5 @@ def geo_node(abbrs):  # pylint: disable=inconsistent-return-statements
             f"WHERE GEO_NODE_ABBR IN ({question_marks});",
             chunk,
         )
-        for (stop_id, stop_name, lat, lon) in result:
+        for stop_id, stop_name, lat, lon in result:
             yield (stop_id, stop_name, maybe_float(lat), maybe_float(lon))
