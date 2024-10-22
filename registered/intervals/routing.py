@@ -342,8 +342,8 @@ class RestrictedGraph:
         # pylint: disable=protected-access
         if not points:
             raise EmptyGraph("unable to build graph with no points")
-
-        polygon = box(*MultiPoint(list(points)).buffer(0.02).bounds)
+        [xmin, ymin, xmax, ymax] = MultiPoint(list(points)).buffer(0.02).bounds
+        polygon = box(xmin, ymin, xmax, ymax)
         graph = nx.MultiDiGraph()
         for name, kwargs in cls.QUERIES.items():
             try:
