@@ -25,7 +25,7 @@ $ vi .env  # configure environment variable
 ### Windows
 ```
 $ choco install pyenv-win
-$ pyenv install 3.9.2
+$ pyenv install 3.9.20
 $ pyenv rehash
 $ pip install pipenv
 $ pipenv sync  # --dev if you want to do development on the scripts
