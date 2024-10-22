@@ -4,21 +4,23 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-attrs = "*"
+attrs = "<20.4"
 pyproj = {version = "*", sys_platform = "!= 'win32'"}
 pyodbc = "*"
 smbprotocol = "*"
 pyinquirer = "*"
-osmnx = "*"
+osmnx = "<1.1"
 folium = "*"
+#scipy = "<1.7"
 scipy = "*"
-sklearn = "*"
-networkx = {ref = "sp-2.4", git = "https://github.com/paulswartz/networkx.git"}
+scikit-learn = "*"
+shapely = "<1.8"
+networkx = {ref = "sp-2.8", git = "https://github.com/paulswartz/networkx.git"}
 
 [dev-packages]
 pytest = "*"
 black = "*"
-pylint = "*"
+pylint = "<2.8"
 atomicwrites = "*"
 pytest-watch = "*"
 pytest-cov = "*"
