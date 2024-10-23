@@ -13,22 +13,18 @@ Reminder: Before the set-up process, clone the registered repository and make su
 
 ### Linux/MacOS
 ```
-$ brew install freetds gdal freetds
-$ asdf install
-$ asdf reshim
-$ pip install pipenv
-$ pipenv sync  # --dev if you want to do development on the scripts
+$ brew install freetds gdal uv
+$ uv python install
+$ uv sync
 $ cp .env.template .env
 $ vi .env  # configure environment variable
 ```
 
 ### Windows
 ```
-$ choco install pyenv-win
-$ pyenv install 3.9.20
-$ pyenv rehash
-$ pip install pipenv
-$ pipenv sync  # --dev if you want to do development on the scripts
+$ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+$ uv python install
+$ uv sync
 $ copy .env.template .env
 $ wordpad .env  # configure environment variable
 ```
@@ -42,7 +38,7 @@ Sync a HASTUS export to the TransitMaster server, validating the data in the pro
   variable. If you have trouble logging in, set `USERNAME` to your AD account.
 
 ```
-$ pipenv run hastus_sync # (if testing, use "—no-push" to avoid actually updating the rating data on the TM server)
+$ uv run python -m registered.hastus_sync # (if testing, use "—no-push" to avoid actually updating the rating data on the TM server)
 ```
 
 ## Scripts
@@ -64,7 +60,7 @@ Merge a set of rating files together in the Combine directory. This step is foun
 Writes the merged files to `<rating>.pat`, `<rating>.nde`, &c.
 
 ```
-$ pipenv run merge <path to Rating/Combine>
+$ uv run run python -m registered.merge <path to Rating/Combine>
 ```
 
 ## Validate
@@ -74,7 +70,7 @@ Validate that the rating files are correct. This step is found under TM-03.05, s
 Exits with 1 if there were any errors.
 
 ```
-$ pipenv run validate <path to Rating/Combine or Rating/Combine/HASTUS_export>
+$ uv run python -m registered.validate <path to Rating/Combine or Rating/Combine/HASTUS_export>
 ```
 
 ## Calendar
@@ -82,7 +78,7 @@ $ pipenv run validate <path to Rating/Combine or Rating/Combine/HASTUS_export>
 Print a CSV which has the service information for each garage, by date. This step is meant to help facilitate TM-03.05, step 7 in [TransitMaster New Rating Procedure]
 
 ```
-$ pipenv run calendar <path to Rating/Combine/HASTUS_export>
+$ uv run python -m registered.calendar <path to Rating/Combine/HASTUS_export>
 ```
 
 ## Cheat Sheet
@@ -90,7 +86,7 @@ $ pipenv run calendar <path to Rating/Combine/HASTUS_export>
 Print a summary of the relevant dates/services for the rating.
 
 ```
-$ pipenv run cheat_sheet <path to Rating/Combine/HASTUS_export>
+$ uv run python -m registered.cheat_sheet <path to Rating/Combine/HASTUS_export>
 ```
 
 ## Stop Comparison
@@ -103,7 +99,7 @@ Print a CSV which shows new/changed stops between two ratings. This step is foun
     - `TRANSITMASTER_PWD`
 
 ```
-$ pipenv run stop_comparison <path to current Rating/Combine> <path to next Rating/Combine>
+$ uv run python -m registered.stop_comparison <path to current Rating/Combine> <path to next Rating/Combine>
 ```
 
 ## Missing/Stop Intervals
@@ -118,7 +114,7 @@ This step is found under TM-03.06, step 2 in [TransitMaster New Rating Procedure
     - `TRANSITMASTER_PWD`
 
 ```
-$ pipenv run missing_intervals intervals.html
+$ uv run python -m registered.missing_intervals intervals.html
 ```
 
 And then open `intervals.html` in your browser.
@@ -126,7 +122,7 @@ And then open `intervals.html` in your browser.
 For stop intervals:
 
 ```
-$ pipenv run stop_intervals intervals.html --stop-id=32549
+$ uv run python -m registered.stop_intervals intervals.html --stop-id=32549
 ```
 
 [TransitMaster New Rating Procedure]: https://github.com/mbta/wiki/blob/master/transit_tech/Procedures/TransitMaster/TM-03_Make_Updates.md

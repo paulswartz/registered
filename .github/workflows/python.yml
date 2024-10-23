@@ -5,34 +5,31 @@ on: [push, pull_request]
 jobs:
   tests:
     name: Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       WORKON_HOME: cache/venv
       PIPENV_CACHE_DIR: cache/pipenv
       OSMNX_CACHE_DIR: cache/osmnx
     steps:
     - uses: actions/checkout@v4
-    - name: Get Python version
-      id: python_version
-      run: echo "version=$(cat .python-version)" >> "$GITHUB_OUTPUT"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
     - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ steps.python_version.outputs.version }}
+      run: uv python install
     - name: Restore dependencies cache
       uses: actions/cache@v4
       with:
         path: cache
-        key: ${{ runner.os }}-cache-${{ hashFiles('Pipfile.lock') }}
+        key: ${{ runner.os }}-cache-${{ hashFiles('uv.lock') }}
         restore-keys: ${{ runner.os }}-cache-
     - name: Install dependencies
-      run: pip install pipenv && pipenv sync -d
+      run: uv sync
     - name: Check formatting
-      run: pipenv run format --check
+      run: bin/format
     - name: Linting
-      run: pipenv run lint
+      run: bin/lint
     - name: Run tests
-      run: pipenv run test -v --cov=registered --cov-fail-under=74 --cov-report=term --cov-report=html
+      run: bin/test -v --cov=registered --cov-fail-under=74 --cov-report=term --cov-report=html
     - name: Check if coverage was reported
       id: has-coverage
       if: ${{ always() }}
