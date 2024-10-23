@@ -1,0 +1,2 @@
+#!/bin/sh
+uv run ptw -w --spool 500 -- --new-first

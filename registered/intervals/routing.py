@@ -9,6 +9,7 @@ import sys
 import attr
 import folium
 import osmnx as ox
+import pandas as pd
 import rtree
 import shapely
 from shapely.geometry import MultiPoint, box
@@ -32,6 +33,7 @@ USEFUL_WAY_TAGS = [
     "access",
     "width",
     "maxheight",
+    "hgv",
 ]
 
 
@@ -135,7 +137,9 @@ class EdgesCache:
             # that case, we'd need to find the bearing at the projection of
             # point on the given geometry. -ps
             (tail_x, tail_y) = row["geometry"].coords[0]
-            angle_bearing = ox.bearing.get_bearing((tail_y, tail_x), (point.y, point.x))
+            angle_bearing = ox.bearing.calculate_bearing(
+                tail_y, tail_x, point.y, point.x
+            )
             return angle_offset(row["bearing"], angle_bearing)
 
         offset = within_distance.apply(calc_angle, axis=1)
@@ -159,7 +163,7 @@ class EdgesCache:
         """
         gdf = ox.graph_to_gdfs(graph, nodes=False)
         gdf = gdf.loc[~gdf.index.isin(self.gdf.index)]
-        self.gdf = self.gdf.append(gdf)
+        self.gdf = pd.concat([self.gdf, gdf])
         self.gdf.sort_index(inplace=True)
         for edge in gdf.itertuples():
             self.index.insert(next(self.counter), edge.geometry.bounds, edge.Index)
@@ -453,6 +457,11 @@ class RestrictedGraph:
             edges.loc[edges["maxheight_m"] < bus_height, ["travel_time", "length"]] = (
                 sys.float_info.max
             )
+
+        # penalize edges which don't allow heavy vehicles
+        if "hgv" in edges.columns:
+            hgv_no = edges["hgv"].eq("no")
+            edges.loc[hgv_no, key] = sys.float_info.max
 
         nx.set_edge_attributes(graph, values=edges["travel_time"], name="travel_time")
         nx.set_edge_attributes(graph, values=edges["length"], name="length")
