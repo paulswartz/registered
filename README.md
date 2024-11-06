@@ -2,10 +2,10 @@
 
 A set of scripts for working with TransitMaster. Reference the rating process documentation [here](https://github.com/mbta/wiki/blob/master/transit_tech/Procedures/TransitMaster/TM-03_Make_Updates.md).
 
-**Effect:**	Different steps throughout the rating process. Allows data validation before importing into TransitMaster.
-**Circumstances:**	As needed. Generally once per quarterly rating.
-**Required Skills:**	None
-**Required Tools:**	VPN access, a text editor, access to TM databases
+**Effect:** Different steps throughout the rating process. Allows data validation before importing into TransitMaster.
+**Circumstances:** As needed. Generally once per quarterly rating.
+**Required Skills:** None
+**Required Tools:** VPN access, Git, a text editor, access to TM databases
 
 ## Setup
 
@@ -17,7 +17,7 @@ $ brew install freetds gdal uv
 $ uv python install
 $ uv sync
 $ cp .env.template .env
-$ vi .env  # configure environment variable
+$ vi .env
 ```
 
 ### Windows
@@ -27,7 +27,7 @@ $ set Path=C:\Users\%USERNAME%\.cargo\bin;%Path%
 $ uv python install
 $ uv sync
 $ copy .env.template .env
-$ wordpad .env  # configure environment variable
+$ notepad .env
 ```
 
 ## HASTUS sync
@@ -39,8 +39,10 @@ Sync a HASTUS export to the TransitMaster server, validating the data in the pro
   variable. If you have trouble logging in, set `USERNAME` to your AD account.
 
 ```
-$ uv run python -m registered.hastus_sync # (if testing, use "—no-push" to avoid actually updating the rating data on the TM server)
+$ uv run python -m registered.hastus_sync
 ```
+
+If you're testing, add `--no-push` to avoid actually updating the rating data on the TM server.
 
 ## Scripts
 
