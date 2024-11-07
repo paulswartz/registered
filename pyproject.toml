@@ -3,7 +3,7 @@ name = "registered"
 version = "0.1.0"
 description = "A set of scripts for working with TransitMaster"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 packages = ["registered"]
 dependencies = [
     "attrs>=24.2.0",
