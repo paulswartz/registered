@@ -59,10 +59,12 @@ class IntervalCalculation:
             ox.utils.log(
                 f"calculating interval from {interval.from_stop} to {interval.to_stop}"
             )
-            fastest_path = graph.shortest_path(interval.from_stop, interval.to_stop)
+            fastest_path = graph.shortest_path(
+                interval.from_stop.point, interval.to_stop.point
+            )
             if fastest_path is not None:
                 shortest_path = graph.shortest_path(
-                    interval.from_stop, interval.to_stop, weight="length"
+                    interval.from_stop.point, interval.to_stop.point, weight="length"
                 )
 
         if fastest_path == shortest_path:
