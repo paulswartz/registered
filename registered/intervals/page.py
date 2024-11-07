@@ -156,7 +156,9 @@ class Page:
             )
             osm_url = self._osm_url(calculation.from_stop, calculation.to_stop)
             folium_map = self._graph.folium_map(
-                calculation.from_stop, calculation.to_stop, calculation.paths()
+                calculation.from_stop.point,
+                calculation.to_stop.point,
+                calculation.paths(),
             )
             folium_map.render()
             map_root = folium_map.get_root()

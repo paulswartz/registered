@@ -54,7 +54,7 @@ def page_from_intervals(intervals: list[Interval]) -> Optional[Page]:
 
     (from_stops, to_stops) = zip(
         *(
-            (interval.from_stop, interval.to_stop)
+            (interval.from_stop.point, interval.to_stop.point)
             for interval in intervals
             if interval.is_located()
         )

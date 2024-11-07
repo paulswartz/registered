@@ -75,16 +75,16 @@ def restrictions_in_polygon(polygon):
     Uses some internal OSMnx methods.
     """
     # pylint: disable=protected-access
-    settings = ox.downloader._make_overpass_settings()
+    settings = ox._downloader._make_overpass_settings()
     restricted_nodes = set()
     restrictions = []
-    for polygon_str in ox.downloader._make_overpass_polygon_coord_strs(polygon):
+    for polygon_str in ox._downloader._make_overpass_polygon_coord_strs(polygon):
         query = (
             f"{settings};("
             f'relation["type"="restriction"]["restriction"~"no_"](poly:"{polygon_str}");'
             f");out;"
         )
-        response = ox.downloader.overpass_request(data={"data": query})
+        response = ox._downloader._overpass_request(data={"data": query})
         (new_nodes, new_restrictions) = osm_relations_to_restrictions(response)
         restricted_nodes |= new_nodes
         restrictions.extend(new_restrictions)

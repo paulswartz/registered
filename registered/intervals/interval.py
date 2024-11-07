@@ -4,52 +4,52 @@ Generic representation of an interval in TransitMaster.
 
 from enum import IntEnum
 from functools import total_ordering
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Union
 import attr
 from shapely.geometry import Point
 
 
-class Stop(Point):
+@attr.define
+class Stop:
     """
     A location at one end of an interval (either start or end).
     """
 
-    # pylint: disable=too-few-public-methods,invalid-name,redefined-builtin
-    def __init__(
-        self,
-        point: Union[Point, Tuple[Union[float, str]]],
-        id: str = None,
-        description: Optional[str] = None,
-    ):
-        if id is None:
-            raise ValueError("id is required")
-        if not isinstance(point, Point):
-            try:
-                point = Point([float(val) for val in point])
-            except ValueError as e:
-                raise ValueError(f"unable to create Stop id={id!r}") from e
-        Point.__init__(self, point)
-        self.id = id
-        self.description = description
+    # pylint: disable=invalid-name,missing-function-docstring
+    point: Point = attr.ib(converter=Point)
+    id: str
+    description: Optional[str] = attr.ib(default=None)
 
     def __str__(self):
         return repr(self)
 
     def __repr__(self):
         return (
-            f"Stop(Point({self.x!r}, {self.y!r}), "
+            f"Stop(Point({self.point.x!r}, {self.point.y!r}), "
             f"id={self.id!r}, description={self.description!r})"
         )
 
+    @property
+    def wkt(self):
+        return self.point.wkt
+
+    @property
+    def x(self):
+        return self.point.x
+
+    @property
+    def y(self):
+        return self.point.y
+
     @staticmethod
     def from_row(
-        lat_str: str, lon_str: str, id: str, description: str
+        lat_str: str, lon_str: str, id_: str, description: str
     ) -> Union["Stop", "StopWithoutLocation"]:
         """
         Try to parse a Stop, and return either a Stop or a StopWithoutLocation.
         """
         try:
-            return Stop((lat_str, lon_str), id=id, description=description)
+            return Stop((lat_str, lon_str), id=id_, description=description)
         except ValueError:
             return StopWithoutLocation(id=id, description=description)
 

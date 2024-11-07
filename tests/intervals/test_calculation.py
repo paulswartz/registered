@@ -19,6 +19,6 @@ class TestIntervalCalculation:
         interval = Interval(
             type=IntervalType.REVENUE, from_stop=nubian_station, to_stop=washington_st
         )
-        graph = RestrictedGraph.from_points([nubian_station, washington_st])
+        graph = RestrictedGraph.from_points([nubian_station.point, washington_st.point])
         calculation = IntervalCalculation.calculate(interval, graph)
         assert calculation.paths() == []
