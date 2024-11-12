@@ -9,7 +9,7 @@ from registered.friendly_environ import FriendlyEnviron
 
 env_file_environ = {}
 try:
-    with open(".env") as f:
+    with open(".env", encoding="utf-8") as f:
         for line in f:
             parts = line.split("=", maxsplit=1)
             if len(parts) == 2:

@@ -308,10 +308,7 @@ def validate_trip_has_valid_pattern(rating):
         if isinstance(trip, parser.Trip)
         and trip.pattern_id not in valid_patterns
         and not trip.as_directed
-        and (
-            trip.trip_type == parser.TripType.REGULAR
-            or trip.trip_type == parser.TripType.OPPORTUNITY
-        )
+        and trip.trip_type in (parser.TripType.REGULAR, parser.TripType.OPPORTUNITY)
     )
 
     for trip in invalid_trips:
@@ -337,10 +334,7 @@ def validate_all_revenue_trips_are_public(rating):
         if isinstance(trip, parser.Trip)
         and trip.public_type == parser.PublicType.NON_PUBLIC
         and not trip.as_directed
-        and (
-            trip.trip_type == parser.TripType.REGULAR
-            or trip.trip_type == parser.TripType.OPPORTUNITY
-        )
+        and trip.trip_type in (parser.TripType.REGULAR, parser.TripType.OPPORTUNITY)
     )
 
     for trip in non_public_revenue_trips:

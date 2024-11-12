@@ -47,7 +47,7 @@ def configure_smb(args):
             {"type": "password", "name": "password", "message": "Password:"}
         )
     answers = {"username": username, "password": password}
-    if questions != []:
+    if questions:
         answers = {**answers, **prompt(questions)}
 
     smbclient.ClientConfig(username=answers["username"], password=answers["password"])
@@ -192,7 +192,10 @@ def schedules_per_garage(tempdir):
     Calculate and write the schedules_per_garage.csv file in Supporting.
     """
     with open(
-        tempdir / "Supporting" / "schedules_per_garage.csv", "w", newline="\r\n"
+        tempdir / "Supporting" / "schedules_per_garage.csv",
+        "w",
+        newline="\r\n",
+        encoding="utf-8",
     ) as file:
         calendar.main_combine(tempdir / "Combine" / "HASTUS_export", file=file)
 
@@ -201,7 +204,12 @@ def write_cheat_sheet(tempdir):
     """
     Calculate and write the cheat sheet in Supporting.
     """
-    with open(tempdir / "Supporting" / "cheat_sheet.txt", "w", newline="\r\n") as file:
+    with open(
+        tempdir / "Supporting" / "cheat_sheet.txt",
+        "w",
+        newline="\r\n",
+        encoding="utf-8",
+    ) as file:
         cheat_sheet.main_combine(tempdir / "Combine" / "HASTUS_export", file=file)
 
 

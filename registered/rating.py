@@ -32,9 +32,9 @@ class Rating:  # pylint: disable=too-few-public-methods
             filenames = merge.dedup_prefix(self.path.glob(filename_glob))
             parsed = []
             for path in filenames:
-                with open(path) as to_be_parsed:
+                with open(path, encoding="utf-8") as to_be_parsed:
                     parsed.extend(parser.parse_lines(to_be_parsed))
-            if parsed == [] and self.expect_all_files:
+            if not parsed and self.expect_all_files:
                 raise RuntimeError(
                     f"unable to find {extension.upper()} files in {self.path}"
                 )

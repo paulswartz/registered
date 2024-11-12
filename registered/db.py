@@ -56,7 +56,7 @@ def grouper(iterable, chunk_size):
     iterable = iter(iterable)
     while True:
         chunk = list(itertools.islice(iterable, chunk_size))
-        if chunk == []:
+        if not chunk:
             break
         yield chunk
 
