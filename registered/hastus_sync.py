@@ -14,7 +14,7 @@ import shutil
 import sys
 import smbclient
 import smbclient.shutil
-from PyInquirer import prompt
+from InquirerPy import prompt
 from registered import calendar, cheat_sheet, environ, merge, parser, seasons, validate
 
 HASTUS = environ["HASTUS_FILE_SERVER"]
