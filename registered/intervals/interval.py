@@ -106,7 +106,7 @@ class Interval:
     A link between two points.
     """
 
-    # pylint: disable=invalid-name
+    # pylint: disable=invalid-name,too-many-instance-attributes
     id: Optional[int] = attr.ib(default=None, converter=optional_int)
     type: Optional[IntervalType] = attr.ib(
         default=None, converter=IntervalType.optional

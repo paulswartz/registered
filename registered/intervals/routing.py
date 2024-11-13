@@ -467,7 +467,7 @@ class RestrictedGraph:
         nx.set_edge_attributes(graph, values=edges["length"], name="length")
         return graph
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def restricted(self, origin, turn, dest, from_attrs, to_attrs):
         """
         Return a boolean indicating if the given turn is restricted.
