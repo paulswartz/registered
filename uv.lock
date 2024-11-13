@@ -21,12 +21,6 @@ wheels = [
 ]
 
 [[package]]
-name = "atomicwrites"
-version = "1.4.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/87/c6/53da25344e3e3a9c01095a89f16dbcda021c609ddb42dd6d7c0528236fb2/atomicwrites-1.4.1.tar.gz", hash = "sha256:81b2c9071a49367a7f770170e5eec8cb66567cfbbc8c73d20ce5ca4a8d71cf11", size = 14227 }
-
-[[package]]
 name = "attrs"
 version = "24.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1033,7 +1027,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "atomicwrites" },
     { name = "black" },
     { name = "pylint" },
     { name = "pytest" },
@@ -1057,7 +1050,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "atomicwrites", specifier = ">=1.4.1" },
     { name = "black", specifier = ">=24.10.0" },
     { name = "pylint", specifier = "<3" },
     { name = "pytest", specifier = ">=8.3.3" },

@@ -21,7 +21,6 @@ dependencies = [
 [tool.uv]
 package = false
 dev-dependencies = [
-    "atomicwrites>=1.4.1",
     "black>=24.10.0",
     "pylint<3",
     "pytest>=8.3.3",
