@@ -53,6 +53,49 @@ def configure_smb(args):
     smbclient.ClientConfig(username=answers["username"], password=answers["password"])
 
 
+def list_hastus_export_dir(args):
+    """
+    List the files in a HASTUS export folder.
+
+    Will use the local HASTUS export folder if present, otherwise will look up
+    via SMB.
+    """
+    if args.hastus_export_folder:
+        return os.listdir(args.hastus_export_folder)
+
+    return smbclient.listdir(smb_path(HASTUS, "KKO", args.hastus_export))
+
+
+def open_hastus_file(args, filename):
+    """
+    Open a file from a HASTUS export folder.
+
+    Will use the local HASTUS export folder if present, otherwise will look up
+    via SMB.
+    """
+    if args.hastus_export_folder:
+        file_path = Path(args.hastus_export_folder) / filename
+        return file_path.open()
+
+    return smbclient.open_file(smb_path(HASTUS, "KKO", args.hastus_export, filename))
+
+
+def copy_hastus_file(args, filename, destination):
+    """
+    Copy a file from the HASTUS export folder to a local destination.
+
+    Will use the local HASTUS export folder if present, otherwise will look up
+    via SMB.
+    """
+    if args.hastus_export_folder:
+        return shutil.copy(Path(args.hastus_export_folder) / filename, destination)
+
+    return smbclient.shutil.copy(
+        smb_path(HASTUS, "KKO", args.hastus_export, filename),
+        destination,
+    )
+
+
 def available_hastus_exports():
     """
     Return the available HASTUS exports, sorted most-recent first.
@@ -87,13 +130,11 @@ def calculate_rating_folder(args):
 
     Prompts the user to confirm.
     """
-    files = smbclient.listdir(smb_path(HASTUS, "KKO", args.hastus_export))
+    files = list_hastus_export_dir(args)
     (calendar_file,) = itertools.islice(
         (f for f in files if f.lower().endswith(".cal")), 0, 1
     )
-    with smbclient.open_file(
-        smb_path(HASTUS, "KKO", args.hastus_export, calendar_file)
-    ) as cal_file:
+    with open_hastus_file(args, calendar_file) as cal_file:
         (cal_record,) = itertools.islice(parser.parse_lines(cal_file), 0, 1)
     season = seasons.season_for_date(cal_record.start_date)
     rating_folder = cal_record.start_date.strftime(f"{season}%m%d%Y")
@@ -115,17 +156,16 @@ def pull_hastus_directory(args, tempdir):
     """
     rating_template = Path(__file__).parent.parent / "support" / "rating_template"
     shutil.copytree(rating_template, tempdir, dirs_exist_ok=True)
-    hastus_files = merge.dedup_prefix(
-        smbclient.listdir(smb_path(HASTUS, "KKO", args.hastus_export))
-    )
+    hastus_files = merge.dedup_prefix(list_hastus_export_dir(args))
     changed = False
     for hastus_file in hastus_files:
         dst = tempdir / "Combine" / "HASTUS_export" / hastus_file
         if dst.exists():
             continue
         print(f"Pulling {hastus_file}...")
-        smbclient.shutil.copy(
-            smb_path(HASTUS, "KKO", args.hastus_export, hastus_file),
+        copy_hastus_file(
+            args,
+            hastus_file,
             tempdir / "Combine" / "HASTUS_export" / hastus_file,
         )
         changed = True
@@ -277,10 +317,11 @@ def main(args):
     Entrypoint for the CLI tool.
     """
     configure_smb(args)
-    if args.hastus_export is None:
-        args.hastus_export = prompt_hastus_export()
-    if not args.hastus_export:
-        return 1
+    if not args.hastus_export_folder:
+        if args.hastus_export is None:
+            args.hastus_export = prompt_hastus_export()
+        if not args.hastus_export:
+            return 1
 
     if args.rating_folder is None:
         args.rating_folder = calculate_rating_folder(args)
@@ -299,6 +340,9 @@ argparser.add_argument(
     help="username to use for logging into shared drives (default: current user)",
 )
 argparser.add_argument("--hastus-export", help="HASTUS export directory to use")
+argparser.add_argument(
+    "--hastus-export-folder", help="Local directory to use as the HASTUS export"
+)
 argparser.add_argument(
     "--rating-folder",
     help="TransitMaster rating folder (default: based on HASTUS export)",
