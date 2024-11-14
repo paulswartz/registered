@@ -41,12 +41,12 @@ def configure_osmnx(**kwargs):
     """
     Set configuration for OSMNX.
     """
-    ox.config(
-        cache_folder=os.environ.get("OSMNX_CACHE_DIR", "./cache"),
-        useful_tags_node=USEFUL_NODE_TAGS,
-        useful_tags_way=USEFUL_WAY_TAGS,
-        **kwargs,
-    )
+    ox.settings.cache_folder = os.environ.get("OSMNX_CACHE_DIR", "./cache")
+    ox.settings.useful_tags_node = USEFUL_NODE_TAGS
+    ox.settings.useful_tags_way = USEFUL_WAY_TAGS
+
+    for k, v in kwargs.items():
+        setattr(ox.settings, k, v)
 
 
 class EmptyGraph(Exception):
@@ -292,7 +292,8 @@ class RestrictedGraph:
         """
         Returns the length (in meters) of the given path.
         """
-        return sum(ox.utils_graph.get_route_edge_attributes(self.graph, path, "length"))
+        gdf = ox.utils_graph.route_to_gdf(self.graph, path, "length")
+        return gdf["length"].sum()
 
     def folium_map(self, from_point, to_point, paths, **kwargs):
         """
@@ -356,7 +357,6 @@ class RestrictedGraph:
                     polygon,
                     retain_all=True,
                     simplify=False,
-                    clean_periphery=False,
                     truncate_by_edge=False,
                     **kwargs,
                 )
