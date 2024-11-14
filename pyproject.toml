@@ -3,13 +3,13 @@ name = "registered"
 version = "0.1.0"
 description = "A set of scripts for working with TransitMaster"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 packages = ["registered"]
 dependencies = [
     "attrs>=24.2.0",
     "folium>=0.18.0",
     "networkx>=2.4",
-    "osmnx<1.6",
+    "osmnx<2",
     "InquirerPy<1",
     "pyodbc>=5.2.0",
     "pyproj>=3.6.1; sys_platform != 'win32'",

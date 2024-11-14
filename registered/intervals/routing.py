@@ -161,7 +161,7 @@ class EdgesCache:
         """
         Update the cache with the new edges from the given graph.
         """
-        gdf = ox.graph_to_gdfs(graph, nodes=False)
+        gdf = ox.convert.graph_to_gdfs(graph, nodes=False)
         gdf = gdf.loc[~gdf.index.isin(self.gdf.index)]
         self.gdf = pd.concat([self.gdf, gdf])
         self.gdf.sort_index(inplace=True)
@@ -186,7 +186,7 @@ class RestrictedGraph:
 
     def __attrs_post_init__(self):
         # pylint: disable=attribute-defined-outside-init
-        (nodes, edges) = ox.utils_graph.graph_to_gdfs(self.graph)
+        (nodes, edges) = ox.convert.graph_to_gdfs(self.graph)
         self._nodes_cache = NodesCache(nodes)
         self._edges_cache = EdgesCache(edges)
         self._created_nodes = {}
@@ -292,7 +292,7 @@ class RestrictedGraph:
         """
         Returns the length (in meters) of the given path.
         """
-        gdf = ox.utils_graph.route_to_gdf(self.graph, path, "length")
+        gdf = ox.routing.route_to_gdf(self.graph, path, weight="length")
         return gdf["length"].sum()
 
     def folium_map(self, from_point, to_point, paths, **kwargs):
@@ -360,7 +360,7 @@ class RestrictedGraph:
                     truncate_by_edge=False,
                     **kwargs,
                 )
-            except ox._errors.EmptyOverpassResponse:
+            except ox._errors.InsufficientResponseError:
                 pass
             else:
                 graph.update(extra_graph)
@@ -437,9 +437,7 @@ class RestrictedGraph:
         """
         Penalize some edges to reduce their use in routing.
         """
-        edges = ox.utils_graph.graph_to_gdfs(
-            graph, nodes=False, fill_edge_geometry=False
-        )
+        edges = ox.convert.graph_to_gdfs(graph, nodes=False, fill_edge_geometry=False)
         key = ["travel_time", "length"]
 
         # penalize residential streets
