@@ -10,7 +10,7 @@ dependencies = [
     "folium>=0.18.0",
     "networkx>=2.4",
     "numpy>1.26.4",
-    "osmnx<2",
+    "osmnx<3",
     "InquirerPy<1",
     "pyodbc>=5.2.0",
     "pyproj>=3.6.1; sys_platform != 'win32'",
